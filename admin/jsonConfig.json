@@ -1,0 +1,24 @@
+{
+  "i18n": true,
+  "type": "panel",
+  "items": {
+    "pollInterval": { "type": "number", "label": "Abfrageintervall (Sekunden)", "min": 5, "max": 3600, "default": 30 },
+    "devices": {
+      "type": "table",
+      "label": "Geräteliste",
+      "xs": 12, "sm": 12, "md": 12, "lg": 12,
+      "items": [
+        { "type": "text", "attr": "name", "title": "Name", "width": "12%", "filter": true, "sort": true, "default": "" },
+        { "type": "select", "attr": "type", "title": "Hersteller", "width": "8%", "filter": true, "sort": true, "default": "midea",
+          "options": [ { "label": "Midea", "value": "midea" }, { "label": "Tuya", "value": "tuya" } ] },
+        { "type": "text", "attr": "id", "title": "Geräte-ID", "width": "12%", "filter": true, "sort": true, "default": "" },
+        { "type": "text", "attr": "host", "title": "IP-Adresse", "width": "10%", "filter": true, "sort": true, "default": "" },
+        { "type": "number", "attr": "port", "title": "Port", "width": "7%", "min": 1, "max": 65535, "filter": true, "sort": true, "default": 6444 },
+        { "type": "password", "attr": "token", "title": "Midea Token", "width": "12%", "default": "" },
+        { "type": "password", "attr": "key", "title": "Midea Key", "width": "12%", "default": "" },
+        { "type": "password", "attr": "localKey", "title": "Tuya Local Key", "width": "12%", "default": "" },
+        { "type": "text", "attr": "version", "title": "Tuya Version", "width": "7%", "default": "" }
+      ]
+    }
+  }
+}

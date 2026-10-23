@@ -1,0 +1,18 @@
+{
+ "pollInterval": "Abfrageintervall (Sekunden)",
+ "tabDevices": "Geräte",
+ "tabInfo": "Info",
+ "_headerDevices": "Klimageräte (nur Klimaanlagen)",
+ "devices": "Geräteliste",
+ "type": "Hersteller",
+ "name": "Name",
+ "id": "Geräte-ID",
+ "host": "IP-Adresse",
+ "port": "Port",
+ "token": "Token (Midea)",
+ "key": "Key (Midea)",
+ "localKey": "localKey (Tuya)",
+ "version": "Protokoll (Tuya)",
+ "_helpSecurity": "Sicherheitshinweis: Zugangsdaten werden verschlüsselt in der Instanz-Konfiguration abgelegt (system.adapter.klima.0). Sie sind damit nicht im Klartext in objects.jsonl sichtbar.",
+ "_help": "Dieser Adapter steuert Klimageräte von Midea und Tuya einheitlich über das lokale LAN. Es wird keine Cloud-Verbindung benötigt - die Geräte arbeiten vollständig offline im Heimnetz."
+}

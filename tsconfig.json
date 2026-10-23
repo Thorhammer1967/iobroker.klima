@@ -1,0 +1,19 @@
+{
+  "compilerOptions": {
+    "moduleResolution": "node16",
+    "module": "node16",
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "allowJs": true,
+    "checkJs": false,
+    "noEmit": true
+  },
+  "include": [
+    "main.js",
+    "lib/**/*.js"
+  ],
+  "exclude": [
+    "node_modules"
+  ],
+  "extends": "@tsconfig/node22/tsconfig.json"
+}

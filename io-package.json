@@ -1,0 +1,133 @@
+{
+  "common": {
+    "name": "klima",
+    "version": "0.1.0",
+    "titleLang": {
+      "en": "Climate",
+      "de": "Klima",
+      "ru": "Климат",
+      "pt": "Clima",
+      "nl": "Klima",
+      "fr": "Climatisation",
+      "it": "Climatizzazione",
+      "es": "Clima",
+      "pl": "Klimatyzacja",
+      "uk": "Клімат",
+      "zh-cn": "空调"
+    },
+    "desc": {
+      "en": "Controls Midea and Tuya air conditioners uniformly via local LAN (no cloud)",
+      "de": "Steuert Midea- und Tuya-Klimageräte einheitlich über das lokale LAN (ohne Cloud)",
+      "ru": "Управляет кондиционерами Midea и Tuya по локальной сети (без облака)",
+      "pt": "Controla conditioners Midea e Tuya uniformemente via LAN local (sem nuvem)",
+      "nl": "Bestuurt Midea- en Tuya-airco's uniform via lokaal LAN (geen cloud)",
+      "fr": "Contrôle les climatiseurs Midea et Tuya via le réseau local (sans cloud)",
+      "it": "Controlla i climatizzatori Midea e Tuya tramite LAN locale (senza cloud)",
+      "es": "Controla los aires acondicionados Midea y Tuya de forma uniforme por LAN local (sin nube)",
+      "pl": "Steruje klimatyzatorami Midea i Tuya jednolicie przez lokalną sieć LAN (bez chmury)",
+      "uk": "Керує кондиціонерами Midea і Tuya єдиноспільно через локальну LAN (без хмари)",
+      "zh-cn": "通过本地 LAN 统一控制 Midea 和 Tuya 空调（无需云端）"
+    },
+    "authors": [
+      "Thorhammer1967 <junk-alles@t-online.de>"
+    ],
+    "keywords": [
+      "klima",
+      "climate",
+      "aircondition",
+      "midea",
+      "tuya"
+    ],
+    "licenseInformation": {
+      "license": "MIT",
+      "type": "free"
+    },
+    "platform": "Javascript/Node.js",
+    "mode": "daemon",
+    "type": "climate",
+    "compact": false,
+    "icon": "klima.png",
+    "extIcon": "https://raw.githubusercontent.com/Thorhammer1967/iobroker.klima/main/admin/klima.png",
+    "connectionType": "local",
+    "dataSource": "poll",
+    "adminUI": {
+      "config": "json"
+    },
+    "dependencies": [
+      {
+        "js-controller": ">=6.0.11"
+      }
+    ],
+    "protectedNative": false,
+    "encryptedNative": [
+      "devices.0.token",
+      "devices.0.key",
+      "devices.0.localKey",
+      "devices.1.token",
+      "devices.1.key",
+      "devices.1.localKey",
+      "devices.2.token",
+      "devices.2.key",
+      "devices.2.localKey",
+      "devices.3.token",
+      "devices.3.key",
+      "devices.3.localKey",
+      "devices.4.token",
+      "devices.4.key",
+      "devices.4.localKey",
+      "devices.5.token",
+      "devices.5.key",
+      "devices.5.localKey"
+    ],
+    "title": "Klima",
+    "enabled": true,
+    "materialize": true,
+    "eraseOnUpload": true,
+    "news": {
+      "en": {
+        "title": "Changelog",
+        "en": "see GitHub releases"
+      },
+      "de": {
+        "title": "Änderungsprotokoll",
+        "de": "siehe GitHub Releases"
+      }
+    },
+    "readme": "https://github.com/Thorhammer1967/iobroker.klima/blob/main/README.md",
+    "tier": 2,
+    "globalDependencies": [
+      {
+        "admin": ">=7.6.20"
+      }
+    ],
+    "supportCustoms": false,
+    "messagebox": true
+  },
+  "native": {
+    "pollInterval": 30,
+    "devices": []
+  },
+  "objects": [],
+  "instanceObjects": [
+    {
+      "_id": "info",
+      "type": "channel",
+      "common": {
+        "name": "Informationen"
+      },
+      "native": {}
+    },
+    {
+      "_id": "info.connection",
+      "type": "state",
+      "common": {
+        "role": "indicator.connected",
+        "name": "Verbindung",
+        "type": "object",
+        "read": true,
+        "write": false
+      },
+      "native": {}
+    }
+  ]
+}
