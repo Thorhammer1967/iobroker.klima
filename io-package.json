@@ -3,30 +3,30 @@
     "name": "klima",
     "version": "0.1.0",
     "titleLang": {
-      "en": "Climate",
+      "en": "Klima",
       "de": "Klima",
       "ru": "Климат",
       "pt": "Clima",
       "nl": "Klima",
-      "fr": "Climatisation",
-      "it": "Climatizzazione",
+      "fr": "Climat",
+      "it": "Clima",
       "es": "Clima",
-      "pl": "Klimatyzacja",
+      "pl": "Klimat",
       "uk": "Клімат",
       "zh-cn": "空调"
     },
     "desc": {
-      "en": "Controls Midea and Tuya air conditioners uniformly via local LAN (no cloud)",
-      "de": "Steuert Midea- und Tuya-Klimageräte einheitlich über das lokale LAN (ohne Cloud)",
-      "ru": "Управляет кондиционерами Midea и Tuya по локальной сети (без облака)",
-      "pt": "Controla conditioners Midea e Tuya uniformemente via LAN local (sem nuvem)",
-      "nl": "Bestuurt Midea- en Tuya-airco's uniform via lokaal LAN (geen cloud)",
-      "fr": "Contrôle les climatiseurs Midea et Tuya via le réseau local (sans cloud)",
-      "it": "Controlla i climatizzatori Midea e Tuya tramite LAN locale (senza cloud)",
-      "es": "Controla los aires acondicionados Midea y Tuya de forma uniforme por LAN local (sin nube)",
-      "pl": "Steruje klimatyzatorami Midea i Tuya jednolicie przez lokalną sieć LAN (bez chmury)",
-      "uk": "Керує кондиціонерами Midea і Tuya єдиноспільно через локальну LAN (без хмари)",
-      "zh-cn": "通过本地 LAN 统一控制 Midea 和 Tuya 空调（无需云端）"
+      "en": "Controls Midea and Tuya air conditioners via local LAN (cloud-free)",
+      "de": "Steuert Midea- und Tuya-Klimageräte über das lokale LAN (cloud-frei)",
+      "ru": "Управляет кондиционерами Midea и Tuya через локальную сеть (без облака)",
+      "pt": "Controla ar condicionado Midea e Tuya via LAN local (sem nuvem)",
+      "nl": "Bestuurt Midea- en Tuya-airconditioners via lokaal LAN (zonder cloud)",
+      "fr": "Contrôle les climatiseurs Midea et Tuya via le LAN local (sans cloud)",
+      "it": "Controlla condizionatori Midea e Tuya via LAN locale (senza cloud)",
+      "es": "Controla aires acondicionados Midea y Tuya por LAN local (sin nube)",
+      "pl": "Steruje klimatyzatorami Midea i Tuya przez lokalną sieć LAN (bez chmury)",
+      "uk": "Керує кондиціонерами Midea та Tuya через локальну мережу (без хмари)",
+      "zh-cn": "通过本地局域网控制美的和涂鸦空调（无需云）"
     },
     "authors": [
       "Thorhammer1967 <junk-alles@t-online.de>"
@@ -36,7 +36,8 @@
       "climate",
       "aircondition",
       "midea",
-      "tuya"
+      "tuya",
+      "lan"
     ],
     "licenseInformation": {
       "license": "MIT",
@@ -58,72 +59,28 @@
         "js-controller": ">=6.0.11"
       }
     ],
-    "protectedNative": [
-      "devices.0.token",
-      "devices.0.key",
-      "devices.0.localKey",
-      "devices.1.token",
-      "devices.1.key",
-      "devices.1.localKey",
-      "devices.2.token",
-      "devices.2.key",
-      "devices.2.localKey",
-      "devices.3.token",
-      "devices.3.key",
-      "devices.3.localKey",
-      "devices.4.token",
-      "devices.4.key",
-      "devices.4.localKey",
-      "devices.5.token",
-      "devices.5.key",
-      "devices.5.localKey"
-    ],
-    "encryptedNative": [
-      "devices.0.token",
-      "devices.0.key",
-      "devices.0.localKey",
-      "devices.1.token",
-      "devices.1.key",
-      "devices.1.localKey",
-      "devices.2.token",
-      "devices.2.key",
-      "devices.2.localKey",
-      "devices.3.token",
-      "devices.3.key",
-      "devices.3.localKey",
-      "devices.4.token",
-      "devices.4.key",
-      "devices.4.localKey",
-      "devices.5.token",
-      "devices.5.key",
-      "devices.5.localKey"
-    ],
-    "titleLang": {
-      "en": "Klima",
-      "de": "Klima",
-      "ru": "Климат",
-      "pt": "Clima",
-      "nl": "Klima",
-      "fr": "Climat",
-      "it": "Clima",
-      "es": "Clima",
-      "pl": "Klimat",
-      "uk": "Клімат",
-      "zh-cn": "空调"
-    },
-    "news": {
-      "0.1.0": {
-        "en": "Initial release: controls Midea and Tuya air conditioners via LAN without cloud.",
-        "de": "Erstveröffentlichung: Steuerung von Midea- und Tuya-Klimageräten über LAN ohne Cloud."
-      }
-    },
-    "readme": "https://github.com/Thorhammer1967/iobroker.klima/blob/main/README.md",
-    "tier": 2,
     "globalDependencies": [
       {
         "admin": ">=7.6.20"
       }
     ],
+    "news": {
+      "0.1.0": {
+        "en": "Initial release: controls Midea and Tuya air conditioners via LAN without cloud.",
+        "de": "Erstveroeffentlichung: Steuerung von Midea- und Tuya-Klimageraeten ueber LAN ohne Cloud.",
+        "ru": "Первый релиз: управление кондиционерами Midea и Tuya через локальную сеть без облака.",
+        "pt": "Lancamento inicial: controla ar condicionados Midea e Tuya via LAN sem nuvem.",
+        "nl": "Eerste release: bestuurt Midea- en Tuya-airconditioners via LAN zonder cloud.",
+        "fr": "Version initiale : controle des climatiseurs Midea et Tuya via LAN sans cloud.",
+        "it": "Versione iniziale: controlla condizionatori Midea e Tuya via LAN senza cloud.",
+        "es": "Lanzamiento inicial: controla aires acondicionados Midea y Tuya por LAN sin nube.",
+        "pl": "Pierwsze wydanie: steruje klimatyzatorami Midea i Tuya przez LAN bez chmury.",
+        "uk": "Перший реліз: керування кондиціонерами Midea та Tuya через локальну мережу без хмари.",
+        "zh-cn": "初始版本：通过局域网控制美的和涂鸦空调，无需云端。"
+      }
+    },
+    "readme": "https://github.com/Thorhammer1967/iobroker.klima/blob/main/README.md",
+    "tier": 2,
     "supportCustoms": false,
     "messagebox": true
   },
@@ -154,5 +111,15 @@
       },
       "native": {}
     }
+  ],
+  "protectedNative": [
+    "devices.*.token",
+    "devices.*.key",
+    "devices.*.localKey"
+  ],
+  "encryptedNative": [
+    "devices.*.token",
+    "devices.*.key",
+    "devices.*.localKey"
   ]
 }

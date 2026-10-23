@@ -54,6 +54,15 @@ Controls **Midea** and **Tuya** air conditioners uniformly over the **local LAN*
 
 In version 0.1.0 tokens/keys/local keys are stored in the adapter configuration. Run the adapter on a trusted ioBroker host and restrict access to the adapter settings.
 
+## Changelog
+
+### 0.1.0 (2026-10-23)
+* (Thorhammer1967) Initial release with support for Midea and Tuya LAN air conditioners
+
 ## License
 
-MIT — see [LICENSE](LICENSE).
+MIT License
+
+Copyright (c) 2026 Thorhammer1967 <junk-alles@t-online.de>
+
+See [LICENSE](LICENSE) for the full license text.
