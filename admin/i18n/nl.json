@@ -12,7 +12,5 @@
  "token": "Token (Midea)",
  "key": "Key (Midea)",
  "localKey": "localKey (Tuya)",
- "version": "Protocol (Tuya)",
- "_helpSecurity": "Security note: credentials are stored encrypted in the instance configuration (system.adapter.klima.0). They are therefore not visible in plain text in objects.jsonl.",
- "_help": "This adapter controls Midea and Tuya air conditioners uniformly via the local LAN. No cloud connection is required - the devices work fully offline within the home network."
+ "version": "Protocol (Tuya)"
 }
