@@ -44,7 +44,7 @@
     },
     "platform": "Javascript/Node.js",
     "mode": "daemon",
-    "type": "climate",
+    "type": "climate-control",
     "compact": false,
     "icon": "klima.png",
     "extIcon": "https://raw.githubusercontent.com/Thorhammer1967/iobroker.klima/main/admin/klima.png",
@@ -58,7 +58,26 @@
         "js-controller": ">=6.0.11"
       }
     ],
-    "protectedNative": false,
+    "protectedNative": [
+      "devices.0.token",
+      "devices.0.key",
+      "devices.0.localKey",
+      "devices.1.token",
+      "devices.1.key",
+      "devices.1.localKey",
+      "devices.2.token",
+      "devices.2.key",
+      "devices.2.localKey",
+      "devices.3.token",
+      "devices.3.key",
+      "devices.3.localKey",
+      "devices.4.token",
+      "devices.4.key",
+      "devices.4.localKey",
+      "devices.5.token",
+      "devices.5.key",
+      "devices.5.localKey"
+    ],
     "encryptedNative": [
       "devices.0.token",
       "devices.0.key",
@@ -79,18 +98,23 @@
       "devices.5.key",
       "devices.5.localKey"
     ],
-    "title": "Klima",
-    "enabled": true,
-    "materialize": true,
-    "eraseOnUpload": true,
+    "titleLang": {
+      "en": "Klima",
+      "de": "Klima",
+      "ru": "Климат",
+      "pt": "Clima",
+      "nl": "Klima",
+      "fr": "Climat",
+      "it": "Clima",
+      "es": "Clima",
+      "pl": "Klimat",
+      "uk": "Клімат",
+      "zh-cn": "空调"
+    },
     "news": {
-      "en": {
-        "title": "Changelog",
-        "en": "see GitHub releases"
-      },
-      "de": {
-        "title": "Änderungsprotokoll",
-        "de": "siehe GitHub Releases"
+      "0.1.0": {
+        "en": "Initial release: controls Midea and Tuya air conditioners via LAN without cloud.",
+        "de": "Erstveröffentlichung: Steuerung von Midea- und Tuya-Klimageräten über LAN ohne Cloud."
       }
     },
     "readme": "https://github.com/Thorhammer1967/iobroker.klima/blob/main/README.md",
@@ -123,9 +147,10 @@
       "common": {
         "role": "indicator.connected",
         "name": "Verbindung",
-        "type": "object",
+        "type": "boolean",
         "read": true,
-        "write": false
+        "write": false,
+        "def": false
       },
       "native": {}
     }
