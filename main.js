@@ -6,7 +6,7 @@
  */
 
 const utils = require("@iobroker/adapter-core");
-const { CHANNELS, MODES, FAN_SPEEDS, SWINGS } = require("./lib/model");
+const { CHANNELS, MODES, FAN_SPEEDS, SWINGS, CONTROL_DEFAULTS } = require("./lib/model");
 const { MideaDevice } = require("./lib/mideaDevice");
 const { TuyaClimateDevice } = require("./lib/tuyaDevice");
 
@@ -80,6 +80,10 @@ class KlimaAdapter extends utils.Adapter {
     }
 
     this.log.info(`${this.devices.size} Klimageraet(e) konfiguriert - Abfrageintervall ${pollInterval / 1000}s`);
+
+    // Voreinstellungen aus der Geraetetabelle auf die Regelungs-States
+    // uebertragen, damit man im Admin-UI direkt Sollwerte setzen kann.
+    await this._initControlDefaults(list);
 
     await this._pollAll();
 
@@ -182,12 +186,56 @@ class KlimaAdapter extends utils.Adapter {
         common.min = 16;
         common.max = 31;
         common.step = 1;
+      } else if (key === "controlTarget") {
+        common.min = 16;
+        common.max = 31;
+        common.step = 0.5;
+        common.def = CONTROL_DEFAULTS.target;
+      } else if (key === "controlHysteresis") {
+        common.min = 0;
+        common.max = 5;
+        common.step = 0.1;
+        common.def = CONTROL_DEFAULTS.hysteresis;
+      } else if (key === "controlSensor") {
+        common.def = "";
+      } else if (key === "controlActive") {
+        common.def = false;
+      } else if (key === "controlState") {
+        common.write = false;
+        common.def = "off";
       }
       await this.extendObject(`${id}.${key}`, { type: "state", common });
     }
   }
 
-  /** Alle Geraete abfragen und States aktualisieren. */
+  /**
+   * Uebertraegt die in der Tabelle hinterlegten Regelungs-Defaults
+   * (controlActive, controlTarget, controlHysteresis) auf die States,
+   * falls diese noch nie gesetzt wurden.
+   */
+  async _initControlDefaults(list) {
+    for (const dev of list) {
+      if (!dev || !dev.id) {
+        continue;
+      }
+      const id = `device_${dev.id}`;
+      const defaults = {
+        controlActive: dev.controlActive === true,
+        controlTarget: typeof dev.controlTarget === "number" ? dev.controlTarget : CONTROL_DEFAULTS.target,
+        controlHysteresis:
+          typeof dev.controlHysteresis === "number" ? dev.controlHysteresis : CONTROL_DEFAULTS.hysteresis,
+      };
+      for (const [key, value] of Object.entries(defaults)) {
+        const state = await this.getStateAsync(`${id}.${key}`);
+        if (state && state.val !== undefined && state.val !== null && state.val !== "" && state.val !== false) {
+          continue;
+        }
+        await this.setState(`${id}.${key}`, value, true);
+      }
+    }
+  }
+
+  /** Alle Geraete abfragen, States aktualisieren und ggf. Regelung ausfuehren. */
   async _pollAll() {
     let anyOnline = false;
     for (const dev of this.devices.values()) {
@@ -200,12 +248,102 @@ class KlimaAdapter extends utils.Adapter {
           }
         }
         anyOnline = true;
+        await this._runControl(dev, id);
       } catch (e) {
         this.log.warn(`${dev.name}: Abfrage fehlgeschlagen - ${e.message}`);
         await this.setState(`device_${dev.id}.online`, false, true);
       }
     }
     await this.setState("info.connection", anyOnline, true);
+  }
+
+  /**
+   * Liest die aktuellen Regelungs-Parameter und fuehrt die einfache
+   * Hysterese-Regelung aus. Die Quelle fuer die Ist-Temperatur ist
+   * entweder der externe Sensor (controlSensor) oder die Geraete-Temperatur.
+   */
+  async _runControl(dev, id) {
+    try {
+      const active = (await this.getStateAsync(`${id}.controlActive`))?.val === true;
+      if (!active) {
+        await this.setState(`${id}.controlState`, "off", true);
+        return;
+      }
+
+      const targetState = await this.getStateAsync(`${id}.controlTarget`);
+      const hysteresisState = await this.getStateAsync(`${id}.controlHysteresis`);
+      const sensorState = await this.getStateAsync(`${id}.controlSensor`);
+      const target = typeof targetState?.val === "number" ? targetState.val : CONTROL_DEFAULTS.target;
+      const hysteresis = typeof hysteresisState?.val === "number" ? hysteresisState.val : CONTROL_DEFAULTS.hysteresis;
+      const sensorId = sensorState?.val ? String(sensorState.val).trim() : "";
+
+      let current = null;
+      if (sensorId) {
+        const ext = await this.getForeignStateAsync(sensorId);
+        current = ext && typeof ext.val === "number" ? ext.val : null;
+      }
+      if (current === null) {
+        const deviceTemp = await this.getStateAsync(`${id}.currentTemperature`);
+        current = typeof deviceTemp?.val === "number" ? deviceTemp.val : null;
+      }
+
+      if (current === null || Number.isNaN(current)) {
+        this.log.warn(`${dev.name}: Regelung keine gueltige Ist-Temperatur (Sensor: ${sensorId || "Gerät"})`);
+        await this.setState(`${id}.controlState`, "error", true);
+        return;
+      }
+
+      const diff = current - target;
+      const powerState = await this.getStateAsync(`${id}.power`);
+      const modeState = await this.getStateAsync(`${id}.mode`);
+      const targetTempState = await this.getStateAsync(`${id}.targetTemperature`);
+      const mode = modeState?.val || "auto";
+      const isOn = powerState?.val === true;
+      let newPower = isOn;
+      let newMode = mode;
+      let newTargetTemp = typeof targetTempState?.val === "number" ? targetTempState.val : target;
+      let controlState = "idle";
+
+      if (diff >= hysteresis) {
+        // Zu warm → kühlen
+        controlState = "cooling";
+        newPower = true;
+        newMode = mode === "heat" ? "cool" : mode || "cool";
+        newTargetTemp = target;
+      } else if (diff <= -hysteresis) {
+        // Zu kalt → heizen
+        controlState = "heating";
+        newPower = true;
+        newMode = mode === "cool" || mode === "dry" ? "heat" : mode || "heat";
+        newTargetTemp = target;
+      } else {
+        // Im Toleranzbereich → laufen lassen oder standby
+        controlState = isOn ? "idle" : "off";
+      }
+
+      const cmd = {};
+      if (newPower !== isOn) {
+        cmd.power = newPower;
+      }
+      if (newMode !== mode && newPower) {
+        cmd.mode = newMode;
+      }
+      if (newTargetTemp !== targetTempState?.val && newPower) {
+        cmd.targetTemperature = newTargetTemp;
+      }
+
+      if (Object.keys(cmd).length) {
+        await dev.write(cmd);
+        this.log.info(
+          `${dev.name}: Regelung ${controlState} → ${JSON.stringify(cmd)} (Ist=${current.toFixed(2)}°C, Soll=${target}°C)`,
+        );
+      }
+
+      await this.setState(`${id}.controlState`, controlState, true);
+    } catch (e) {
+      this.log.warn(`${dev.name}: Regelung fehlgeschlagen - ${e.message}`);
+      await this.setState(`${id}.controlState`, "error", true);
+    }
   }
 
   /** Schreibbefehl eines States verarbeiten. */
@@ -234,6 +372,17 @@ class KlimaAdapter extends utils.Adapter {
     const cmd = {};
     cmd[channel] = state.val;
     try {
+      // Bei Regelungs-Parametern nicht direkt ans Geraet schreiben.
+      if (["controlActive", "controlTarget", "controlHysteresis", "controlSensor"].includes(channel)) {
+        await this.setStateAsync(`${relId}`, state.val, true);
+        // Sofort eine Regelungsrunde anstossen, damit die Aenderung wirksam wird.
+        const devId = parts[0].replace(/^device_/, "");
+        const dev = this.devices.get(devId);
+        if (dev) {
+          await this._runControl(dev, parts[0]);
+        }
+        return;
+      }
       await dev.write(cmd);
       this.log.debug(`${dev.name}: ${channel} = ${JSON.stringify(state.val)} gesetzt`);
       await this.setStateAsync(`${relId}`, state.val, true);

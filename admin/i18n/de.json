@@ -12,5 +12,11 @@
   "token": "Token (Midea)",
   "key": "Key (Midea)",
   "localKey": "localKey (Tuya)",
-  "version": "Protokoll (Tuya)"
+  "version": "Protokoll (Tuya)",
+  "controlActive": "Regelung aktiv",
+  "controlTarget": "Regelung Solltemperatur",
+  "controlHysteresis": "Regelung Hysterese",
+  "controlSensor": "Externer Sensor State-ID",
+  "controlState": "Regelungszustand",
+  "tabControl": "Thermostat"
 }

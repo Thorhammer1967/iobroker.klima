@@ -8,16 +8,19 @@
       "label": "devices",
       "xs": 12, "sm": 12, "md": 12, "lg": 12, "xl": 12,
       "items": [
-        { "type": "text", "attr": "name", "title": "name", "width": "12%", "filter": true, "sort": true, "default": "" },
-        { "type": "select", "attr": "type", "title": "type", "width": "8%", "filter": true, "sort": true, "default": "midea",
+        { "type": "text", "attr": "name", "title": "name", "width": "11%", "filter": true, "sort": true, "default": "" },
+        { "type": "select", "attr": "type", "title": "type", "width": "7%", "filter": true, "sort": true, "default": "midea",
           "options": [ { "label": "Midea", "value": "midea" }, { "label": "Tuya", "value": "tuya" } ] },
-        { "type": "text", "attr": "id", "title": "id", "width": "12%", "filter": true, "sort": true, "default": "" },
-        { "type": "text", "attr": "host", "title": "host", "width": "10%", "filter": true, "sort": true, "default": "" },
-        { "type": "number", "attr": "port", "title": "port", "width": "7%", "min": 1, "max": 65535, "filter": true, "sort": true, "default": 6444 },
-        { "type": "password", "attr": "token", "title": "token", "width": "12%", "default": "" },
-        { "type": "password", "attr": "key", "title": "key", "width": "12%", "default": "" },
-        { "type": "password", "attr": "localKey", "title": "localKey", "width": "12%", "default": "" },
-        { "type": "text", "attr": "version", "title": "version", "width": "7%", "default": "" }
+        { "type": "text", "attr": "id", "title": "id", "width": "11%", "filter": true, "sort": true, "default": "" },
+        { "type": "text", "attr": "host", "title": "host", "width": "9%", "filter": true, "sort": true, "default": "" },
+        { "type": "number", "attr": "port", "title": "port", "width": "6%", "min": 1, "max": 65535, "filter": true, "sort": true, "default": 6444 },
+        { "type": "password", "attr": "token", "title": "token", "width": "10%", "default": "" },
+        { "type": "password", "attr": "key", "title": "key", "width": "10%", "default": "" },
+        { "type": "password", "attr": "localKey", "title": "localKey", "width": "10%", "default": "" },
+        { "type": "text", "attr": "version", "title": "version", "width": "6%", "default": "" },
+        { "type": "checkbox", "attr": "controlActive", "title": "controlActive", "width": "6%", "default": false },
+        { "type": "number", "attr": "controlTarget", "title": "controlTarget", "width": "7%", "min": 16, "max": 31, "step": 0.5, "default": 22 },
+        { "type": "number", "attr": "controlHysteresis", "title": "controlHysteresis", "width": "6%", "min": 0, "max": 5, "step": 0.1, "default": 0.5 }
       ]
     }
   }
