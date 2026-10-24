@@ -52,6 +52,23 @@ Steuert **Midea**- und **Tuya**-Klimageräte einheitlich über das **lokale LAN*
 
 In Version 0.1.0 werden Token/Key/Local Key in der Adapter-Konfiguration gespeichert. Verwende den Adapter auf einem vertrauenswürdigen ioBroker-Host und schränke den Zugriff auf die Adapter-Einstellungen ein.
 
+## Tipps
+
+### Fernbedienungstemperatursensor nutzen (Follow Me) bei Midea-Geräten
+
+Viele Midea-Fernbedienungen enthalten einen Temperatursensor und unterstützen den **Follow-Me**- / **iFeel**-Modus. Wenn er aktiv ist, nutzt die Inneneinheit nicht ihren internen Raumsensor, sondern die Temperaturmessung der Fernbedienung.
+
+- **Follow Me einmalig an der Original-Fernbedienung aktivieren** (Taste „Follow Me“, „iFeel“, „Sensor“ oder im SET-Menü).
+- Die Fernbedienung sendet dann automatisch etwa alle 3 Minuten die Temperatur per IR an die Inneneinheit.
+- Der Modus bleibt aktiv, bis man ihn an der Fernbedienung wieder ausschaltet (oder die Fernbedienung ausfällt, z. B. leere Batterien).
+- Der Adapter liest die Temperatur, die die Inneneinheit gerade verwendet, über `device_<ID>.currentTemperature`.
+- Damit kannst du `device_<ID>.currentTemperature` in Automatisierungen als Raumtemperatur verwenden — bei aktiviertem Follow Me entspricht sie der Temperatur am Ort der Fernbedienung.
+
+## Changelog
+
+### 0.1.0 (2026-10-23)
+* (Thorhammer1967) Erstveröffentlichung mit Unterstützung für Midea- und Tuya-LAN-Klimageräte
+
 ## Lizenz
 
 MIT — siehe [LICENSE](LICENSE).

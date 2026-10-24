@@ -54,6 +54,18 @@ Controls **Midea** and **Tuya** air conditioners uniformly over the **local LAN*
 
 In version 0.1.0 tokens/keys/local keys are stored in the adapter configuration. Run the adapter on a trusted ioBroker host and restrict access to the adapter settings.
 
+## Tips
+
+### Using the remote temperature sensor (Follow Me) on Midea units
+
+Many Midea AC remotes contain a temperature sensor and support **Follow Me** / **iFeel** mode. When enabled on the remote, the indoor unit uses the remote's temperature reading instead of its built-in room sensor.
+
+- Activate **Follow Me once on the original remote** (look for "Follow Me", "iFeel", "Sensor", or in the SET menu).
+- The remote sends the temperature to the indoor unit automatically every ~3 minutes.
+- The mode stays active until you turn it off on the remote again (or the remote stops sending, e.g. flat batteries).
+- The adapter reads the temperature the indoor unit is currently using via `device_<ID>.currentTemperature`.
+- You can therefore use `device_<ID>.currentTemperature` in automations as the room temperature — when Follow Me is enabled, it reflects the temperature at the remote's location.
+
 ## Changelog
 
 ### 0.1.0 (2026-10-23)
