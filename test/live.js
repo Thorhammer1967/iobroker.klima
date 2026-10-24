@@ -10,6 +10,27 @@
 const { MideaDevice } = require("../lib/mideaDevice");
 const { TuyaClimateDevice } = require("../lib/tuyaDevice");
 
+/** Minimaler Mock-Adapter mit den Timer-Methoden, die die Klassen erwarten. */
+function makeMockAdapter() {
+  const timers = [];
+  return {
+    log: { debug: () => {}, info: () => {}, warn: () => {}, error: () => {} },
+    setTimeout: (fn, ms) => {
+      const t = setTimeout(fn, ms);
+      timers.push(t);
+      return t;
+    },
+    setInterval: (fn, ms) => {
+      const t = setInterval(fn, ms);
+      timers.push(t);
+      return t;
+    },
+    clearTimeout: (t) => clearTimeout(t),
+    clearInterval: (t) => clearInterval(t),
+    delay: (ms) => new Promise((resolve) => setTimeout(resolve, ms)),
+  };
+}
+
 // Zugangsdaten werden aus Umgebungsvariablen gelesen, damit sie nicht
 // im Quellcode stehen. Siehe .env.example / test/README.
 const DEVICES = [
@@ -73,10 +94,11 @@ const DEVICES = [
   let ok = 0;
   let fail = 0;
   for (const cfg of DEVICES) {
+    const mockAdapter = makeMockAdapter();
     const dev =
       cfg.type === "tuya"
-        ? new TuyaClimateDevice(cfg, { debug: () => {}, info: () => {}, warn: () => {}, error: () => {} })
-        : new MideaDevice(cfg, { debug: () => {}, info: () => {}, warn: () => {}, error: () => {} });
+        ? new TuyaClimateDevice(cfg, { debug: () => {}, info: () => {}, warn: () => {}, error: () => {} }, mockAdapter)
+        : new MideaDevice(cfg, { debug: () => {}, info: () => {}, warn: () => {}, error: () => {} }, mockAdapter);
     try {
       await dev.connect();
       const status = await dev.read();
