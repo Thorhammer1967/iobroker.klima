@@ -18,6 +18,7 @@ class KlimaAdapter extends utils.Adapter {
     this.devices = new Map();
     this._pollTimer = null;
     this._overrideTimers = new Map();
+    this._lastOverrideState = new Map();
   }
 
   async onReady() {
@@ -437,6 +438,29 @@ class KlimaAdapter extends utils.Adapter {
   }
 
   /**
+   * Vergleicht die aktuell gelesenen Geraete-Werte mit dem letzten
+   * Override-Zustand. Aendert sich power, mode, targetTemperature,
+   * fanSpeed oder swing, gilt das als Fernbedienungseingriff und der
+   * Override wird beendet.
+   * @returns {boolean}
+   */
+  async _checkRemoteChange(dev, id) {
+    const tracked = ["power", "mode", "targetTemperature", "fanSpeed", "swing"];
+    let changed = false;
+    const last = this._lastOverrideState.get(dev.id) || {};
+    const current = {};
+    for (const key of tracked) {
+      const state = await this.getStateAsync(`${id}.${key}`);
+      current[key] = state?.val;
+      if (key in last && current[key] !== last[key]) {
+        changed = true;
+      }
+    }
+    this._lastOverrideState.set(dev.id, current);
+    return changed;
+  }
+
+  /**
    * Liest die aktuellen Regelungs-Parameter und fuehrt die einfache
    * Hysterese-Regelung aus. Die Quelle fuer die Ist-Temperatur ist
    * entweder der externe Sensor (controlSensor) oder die Geraete-Temperatur.
@@ -445,8 +469,18 @@ class KlimaAdapter extends utils.Adapter {
     try {
       const override = (await this.getStateAsync(`thermostat.devices.${dev.id}.override`))?.val === true;
       if (override) {
-        await this.setState(`${id}.controlState`, "override", true);
-        return;
+        // Pruefen, ob sich das Geraet per Fernbedienung geaendert hat.
+        const changed = await this._checkRemoteChange(dev, id);
+        if (changed) {
+          this._stopOverride(dev.id);
+          await this.setState(`thermostat.devices.${dev.id}.override`, false, true);
+          await this.setState(`thermostat.devices.${dev.id}.overrideRemaining`, 0, true);
+          await this._updateGlobalActiveFromDevices();
+          this.log.info(`${dev.name}: Override durch Fernbedienung abgebrochen`);
+        } else {
+          await this.setState(`${id}.controlState`, "override", true);
+          return;
+        }
       }
 
       const active = (await this.getStateAsync(`${id}.controlActive`))?.val === true;
@@ -720,6 +754,15 @@ class KlimaAdapter extends utils.Adapter {
     }
     try {
       await dev.write(cmd);
+      // Gemerkten Override-Zustand auf die soeben geschriebenen Werte
+      // setzen, damit eine Fernbedienungsaenderung korrekt erkannt wird.
+      this._lastOverrideState.set(dev.id, {
+        power: true,
+        mode: cmd.mode || mode,
+        targetTemperature: cmd.targetTemperature,
+        fanSpeed: null,
+        swing: null,
+      });
       if (setOverrideState) {
         await this.setState(`thermostat.devices.${dev.id}.override`, true, true);
       }
