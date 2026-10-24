@@ -12,7 +12,5 @@
   "token": "Token (Midea)",
   "key": "Key (Midea)",
   "localKey": "localKey (Tuya)",
-  "version": "Protokoll (Tuya)",
-  "_help": "Dieser Adapter steuert Midea- und Tuya-Klimageräte einheitlich über das lokale LAN. Es ist keine Cloud-Verbindung erforderlich – die Geräte funktionieren vollständig offline im Heimnetz.",
-  "_helpSecurity": "Sicherheitshinweis: Zugangsdaten werden verschlüsselt in der Instanz-Konfiguration (system.adapter.klima.0) gespeichert. Sie sind daher nicht im Klartext in objects.jsonl sichtbar."
+  "version": "Protokoll (Tuya)"
 }
