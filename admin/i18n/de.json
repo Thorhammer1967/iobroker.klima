@@ -18,5 +18,7 @@
   "controlHysteresis": "Regelung Hysterese",
   "controlSensor": "Externer Sensor State-ID",
   "controlState": "Regelungszustand",
-  "tabControl": "Thermostat"
+  "tabControl": "Thermostat",
+  "devicesTab": "Geräte",
+  "thermostatHint": "Die zentrale Thermostat-Steuerung findest du unter den Objekten: klima.0.thermostat.globalActive und klima.0.thermostat.devices.<Gerät>.*"
 }

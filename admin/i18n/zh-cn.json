@@ -18,5 +18,7 @@
   "controlHysteresis": "Control hysteresis",
   "controlSensor": "External sensor state ID",
   "controlState": "Control state",
-  "tabControl": "Thermostat"
+  "tabControl": "Thermostat",
+  "devicesTab": "设备",
+  "thermostatHint": "中央恒温控制可在以下对象中使用: klima.0.thermostat.globalActive 和 klima.0.thermostat.devices.<设备>.*"
 }

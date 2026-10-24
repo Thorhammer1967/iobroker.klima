@@ -18,5 +18,7 @@
   "controlHysteresis": "Control hysteresis",
   "controlSensor": "External sensor state ID",
   "controlState": "Control state",
-  "tabControl": "Thermostat"
+  "tabControl": "Thermostat",
+  "devicesTab": "Apparaten",
+  "thermostatHint": "Centrale thermostaatregeling is beschikbaar in objecten: klima.0.thermostat.globalActive en klima.0.thermostat.devices.<apparaat>.*"
 }

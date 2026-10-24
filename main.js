@@ -85,6 +85,10 @@ class KlimaAdapter extends utils.Adapter {
     // uebertragen, damit man im Admin-UI direkt Sollwerte setzen kann.
     await this._initControlDefaults(list);
 
+    // Zentrale Thermostat-Steuerung anlegen.
+    await this._createThermostatObjects(list);
+    await this._initThermostatDefaults(list);
+
     await this._pollAll();
 
     this._pollTimer = this.setInterval(() => {
@@ -97,7 +101,8 @@ class KlimaAdapter extends utils.Adapter {
     // "device_*" matcht alle Geraete-Objekte, der Namespace wird
     // automatisch vorangestellt.
     await this.subscribeStatesAsync("device_*");
-    this.log.debug("States 'device_*' abonniert.");
+    await this.subscribeStatesAsync("thermostat.*");
+    this.log.debug("States 'device_*' und 'thermostat.*' abonniert.");
   }
 
   /**
@@ -235,6 +240,99 @@ class KlimaAdapter extends utils.Adapter {
     }
   }
 
+  /**
+   * Legt die zentrale Thermostat-Steuerung an:
+   *   thermostat.globalActive            (Master-Schalter)
+   *   thermostat.devices.<id>.active     (pro Geraet)
+   *   thermostat.devices.<id>.target     (pro Geraet)
+   *   thermostat.devices.<id>.hysteresis (pro Geraet)
+   */
+  async _createThermostatObjects(list) {
+    await this.extendObject("thermostat", { type: "channel", common: { name: "Thermostat" } });
+    await this.extendObject("thermostat.globalActive", {
+      type: "state",
+      common: {
+        name: "Thermostat global active",
+        type: "boolean",
+        role: "switch.enable",
+        read: true,
+        write: true,
+        def: false,
+      },
+    });
+
+    await this.extendObject("thermostat.devices", { type: "channel", common: { name: "Devices" } });
+    for (const dev of list) {
+      if (!dev || !dev.id) {
+        continue;
+      }
+      const base = `thermostat.devices.${dev.id}`;
+      await this.extendObject(base, { type: "device", common: { name: dev.name || dev.id } });
+      await this.extendObject(`${base}.active`, {
+        type: "state",
+        common: { name: "Active", type: "boolean", role: "switch.enable", read: true, write: true, def: false },
+      });
+      await this.extendObject(`${base}.target`, {
+        type: "state",
+        common: {
+          name: "Target temperature",
+          type: "number",
+          role: "level.temperature",
+          unit: "°C",
+          read: true,
+          write: true,
+          min: 16,
+          max: 31,
+          step: 0.5,
+          def: CONTROL_DEFAULTS.target,
+        },
+      });
+      await this.extendObject(`${base}.hysteresis`, {
+        type: "state",
+        common: {
+          name: "Hysteresis",
+          type: "number",
+          role: "level",
+          unit: "°C",
+          read: true,
+          write: true,
+          min: 0,
+          max: 5,
+          step: 0.1,
+          def: CONTROL_DEFAULTS.hysteresis,
+        },
+      });
+    }
+  }
+
+  /**
+   * Synchronisiert die zentrale Thermostat-Steuerung mit den Geraete-
+   * Regelungs-States beim Start.
+   */
+  async _initThermostatDefaults(list) {
+    const anyActive = [];
+    for (const dev of list) {
+      if (!dev || !dev.id) {
+        continue;
+      }
+      const deviceId = `device_${dev.id}`;
+      const thermoId = `thermostat.devices.${dev.id}`;
+
+      const active = (await this.getStateAsync(`${deviceId}.controlActive`))?.val === true;
+      const target = (await this.getStateAsync(`${deviceId}.controlTarget`))?.val ?? CONTROL_DEFAULTS.target;
+      const hysteresis =
+        (await this.getStateAsync(`${deviceId}.controlHysteresis`))?.val ?? CONTROL_DEFAULTS.hysteresis;
+
+      await this.setState(`${thermoId}.active`, active, true);
+      await this.setState(`${thermoId}.target`, target, true);
+      await this.setState(`${thermoId}.hysteresis`, hysteresis, true);
+      if (active) {
+        anyActive.push(dev.id);
+      }
+    }
+    await this.setState("thermostat.globalActive", anyActive.length > 0, true);
+  }
+
   /** Alle Geraete abfragen, States aktualisieren und ggf. Regelung ausfuehren. */
   async _pollAll() {
     let anyOnline = false;
@@ -348,13 +446,31 @@ class KlimaAdapter extends utils.Adapter {
 
   /** Schreibbefehl eines States verarbeiten. */
   async _onStateChange(id, state) {
-    if (!state || state.ack) {
+    if (!state) {
       return;
     }
     // Das stateChange-Event liefert die volle ID inkl. Namespace
     // (z. B. "klima.0.device_<id>.<channel>"). Relativ zum Namespace
     // arbeiten, damit die ID-Pruefung greift.
     const relId = id.startsWith(`${this.namespace}.`) ? id.slice(this.namespace.length + 1) : id;
+
+    if (state.ack) {
+      // Bestaetigte Aenderungen nur noch intern synchronisieren.
+      await this._syncAckState(relId, state.val);
+      return;
+    }
+
+    // Zentrale Thermostat-Steuerung.
+    if (relId === "thermostat.globalActive") {
+      await this._setGlobalActive(state.val === true);
+      return;
+    }
+
+    if (relId.startsWith("thermostat.devices.")) {
+      await this._handleThermostatDeviceState(relId, state.val);
+      return;
+    }
+
     if (!relId.startsWith("device_")) {
       return;
     }
@@ -376,11 +492,9 @@ class KlimaAdapter extends utils.Adapter {
       if (["controlActive", "controlTarget", "controlHysteresis", "controlSensor"].includes(channel)) {
         await this.setStateAsync(`${relId}`, state.val, true);
         // Sofort eine Regelungsrunde anstossen, damit die Aenderung wirksam wird.
-        const devId = parts[0].replace(/^device_/, "");
-        const dev = this.devices.get(devId);
-        if (dev) {
-          await this._runControl(dev, parts[0]);
-        }
+        await this._runControl(dev, parts[0]);
+        // Zentrale Thermostat-Anzeige mit aktualisieren.
+        await this._syncDeviceControlToThermostat(devId, channel, state.val);
         return;
       }
       await dev.write(cmd);
@@ -389,6 +503,91 @@ class KlimaAdapter extends utils.Adapter {
     } catch (e) {
       this.log.error(`${dev.name}: Schreiben von ${channel} fehlgeschlagen - ${e.message}`);
     }
+  }
+
+  /**
+   * Setzt den globalen Thermostat-Schalter und aktiviert/deaktiviert
+   * damit alle Geraete gleichzeitig.
+   */
+  async _setGlobalActive(value) {
+    await this.setState("thermostat.globalActive", value, true);
+    for (const [devId, dev] of this.devices.entries()) {
+      await this.setState(`device_${devId}.controlActive`, value, true);
+      await this.setState(`thermostat.devices.${devId}.active`, value, true);
+      if (value) {
+        await this._runControl(dev, `device_${devId}`);
+      }
+    }
+    this.log.info(`Thermostat global ${value ? "aktiviert" : "deaktiviert"}`);
+  }
+
+  /**
+   * Verarbeitet Aenderungen an thermostat.devices.<id>.{active,target,hysteresis}
+   * und schreibt sie auf die jeweiligen device_* control-States.
+   */
+  async _handleThermostatDeviceState(relId, value) {
+    const match = relId.match(/^thermostat\.devices\.([^.]+)\.(active|target|hysteresis)$/);
+    if (!match) {
+      return;
+    }
+    const devId = match[1];
+    const field = match[2];
+    const deviceId = `device_${devId}`;
+    const dev = this.devices.get(devId);
+    if (!dev) {
+      return;
+    }
+    const mapping = { active: "controlActive", target: "controlTarget", hysteresis: "controlHysteresis" };
+    const deviceChannel = mapping[field];
+
+    await this.setState(`${deviceId}.${deviceChannel}`, value, true);
+    await this.setState(relId, value, true);
+    await this._updateGlobalActiveFromDevices();
+    await this._runControl(dev, deviceId);
+    this.log.info(`${dev.name}: Thermostat ${field} = ${JSON.stringify(value)}`);
+  }
+
+  /**
+   * Prueft, ob mindestens ein Geraet aktiv ist, und aktualisiert den
+   * globalen Schalter entsprechend.
+   */
+  async _updateGlobalActiveFromDevices() {
+    let anyActive = false;
+    for (const devId of this.devices.keys()) {
+      const active = (await this.getStateAsync(`device_${devId}.controlActive`))?.val === true;
+      if (active) {
+        anyActive = true;
+        break;
+      }
+    }
+    await this.setState("thermostat.globalActive", anyActive, true);
+  }
+
+  /**
+   * Synchronisiert ein bestaetigtes device_* control-State auf die
+   * zentrale Thermostat-Anzeige.
+   */
+  async _syncAckState(relId, value) {
+    const match = relId.match(/^device_([^.]+)\.(controlActive|controlTarget|controlHysteresis)$/);
+    if (!match) {
+      return;
+    }
+    const devId = match[1];
+    const channel = match[2];
+    await this._syncDeviceControlToThermostat(devId, channel, value);
+  }
+
+  /**
+   * Synchronisiert device_* control-States auf thermostat.devices.*.
+   */
+  async _syncDeviceControlToThermostat(devId, channel, value) {
+    const mapping = { controlActive: "active", controlTarget: "target", controlHysteresis: "hysteresis" };
+    const field = mapping[channel];
+    if (!field) {
+      return;
+    }
+    await this.setState(`thermostat.devices.${devId}.${field}`, value, true);
+    await this._updateGlobalActiveFromDevices();
   }
 
   async _onUnload(callback) {

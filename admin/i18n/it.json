@@ -18,5 +18,7 @@
   "controlHysteresis": "Control hysteresis",
   "controlSensor": "External sensor state ID",
   "controlState": "Control state",
-  "tabControl": "Thermostat"
+  "tabControl": "Thermostat",
+  "devicesTab": "Dispositivi",
+  "thermostatHint": "Il controllo centrale del termostato è disponibile negli oggetti: klima.0.thermostat.globalActive e klima.0.thermostat.devices.<dispositivo>.*"
 }
