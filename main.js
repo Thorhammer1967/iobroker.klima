@@ -127,9 +127,7 @@ class KlimaAdapter extends utils.Adapter {
       if (changed) {
         // v7: setObject verlangt zwingend einen Callback.
         await new Promise((resolve, reject) => {
-          this.setObject(`system.adapter.${this.namespace}`, obj, (err) =>
-            err ? reject(err) : resolve(),
-          );
+          this.setObject(`system.adapter.${this.namespace}`, obj, (err) => (err ? reject(err) : resolve()));
         });
         this.log.info("Zugangsdaten verschluesselt in der Instanz-Konfiguration abgelegt.");
       }
@@ -225,22 +223,22 @@ class KlimaAdapter extends utils.Adapter {
     const parts = relId.split(".");
     // Aufbau: device_<geraeteId>.<channel>  ->  2 Teile
     if (parts.length < 2) {
-        return;
+      return;
     }
     const devId = parts[0].replace(/^device_/, "");
     const channel = parts[1];
     const dev = this.devices.get(devId);
     if (!dev) {
-        return;
+      return;
     }
     const cmd = {};
     cmd[channel] = state.val;
     try {
-        await dev.write(cmd);
-        this.log.debug(`${dev.name}: ${channel} = ${JSON.stringify(state.val)} gesetzt`);
-        await this.setStateAsync(`${relId}`, state.val, true);
+      await dev.write(cmd);
+      this.log.debug(`${dev.name}: ${channel} = ${JSON.stringify(state.val)} gesetzt`);
+      await this.setStateAsync(`${relId}`, state.val, true);
     } catch (e) {
-        this.log.error(`${dev.name}: Schreiben von ${channel} fehlgeschlagen - ${e.message}`);
+      this.log.error(`${dev.name}: Schreiben von ${channel} fehlgeschlagen - ${e.message}`);
     }
   }
 
