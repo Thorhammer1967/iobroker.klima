@@ -1,7 +1,7 @@
 {
   "common": {
     "name": "klima",
-    "version": "0.1.3",
+    "version": "0.2.0",
     "titleLang": {
       "en": "Klima",
       "de": "Klima",
@@ -65,6 +65,10 @@
       }
     ],
     "news": {
+      "0.2.0": {
+        "en": "Added dedicated schedules tab: per-device weekly/day time plans with mode, target temp, fan and swing.",
+        "de": "Neuer Zeitplaene-Reiter: pro Geraet wochen-/tagesbasierte Zeitfenster mit Modus, Solltemperatur, Luefter und Swing."
+      },
       "0.1.3": {
         "en": "Admin UI device table changes are now applied immediately without adapter restart.",
         "de": "Aenderungen in der Admin-UI-Geraetetabelle werden jetzt sofort uebernommen, ohne Adapter-Neustart."

@@ -20,6 +20,7 @@ class KlimaAdapter extends utils.Adapter {
     this._pollTimer = null;
     this._overrideTimers = new Map();
     this._lastOverrideState = new Map();
+    this._scheduleState = new Map();
   }
 
   async onReady() {
@@ -99,6 +100,11 @@ class KlimaAdapter extends utils.Adapter {
     }, pollInterval);
 
     this.on("stateChange", this._onStateChange.bind(this));
+
+    // Zeitplan-Engine: einmal pro Minute pruefen, ob ein Zeitfenster aktiv ist.
+    this._scheduleTimer = this.setInterval(() => {
+      this._runScheduleEngine().catch((e) => this.log.error(`Zeitplan-Engine fehlgeschlagen: ${e.message}`));
+    }, 60_000);
 
     // v7: ohne explizites Abonnement feuert das stateChange-Event nicht.
     // "device_*" matcht alle Geraete-Objekte, der Namespace wird
@@ -450,6 +456,110 @@ class KlimaAdapter extends utils.Adapter {
   }
 
   /**
+   * Prueft, ob ein Zeitplan-Eintrag fuer das aktuelle Datum/Zeit aktiv ist.
+   */
+  _isScheduleActive(entry) {
+    if (!entry || entry.active !== true || !entry.deviceId) {
+      return false;
+    }
+    const weekdays = ["su", "mo", "tu", "we", "th", "fr", "sa"];
+    const now = new Date();
+    const dayKey = weekdays[now.getDay()];
+    if (entry[dayKey] !== true) {
+      return false;
+    }
+    const currentMinutes = now.getHours() * 60 + now.getMinutes();
+    const start = this._timeToMinutes(entry.start);
+    const end = this._timeToMinutes(entry.end);
+    if (start === null || end === null) {
+      return false;
+    }
+    return currentMinutes >= start && currentMinutes < end;
+  }
+
+  _timeToMinutes(value) {
+    if (typeof value !== "string" || !value.trim()) {
+      return null;
+    }
+    const parts = value.trim().split(":");
+    if (parts.length < 2) {
+      return null;
+    }
+    const hours = parseInt(parts[0], 10);
+    const minutes = parseInt(parts[1], 10);
+    if (Number.isNaN(hours) || Number.isNaN(minutes)) {
+      return null;
+    }
+    return hours * 60 + minutes;
+  }
+
+  /**
+   * Ermittelt das aktive Zeitplan-Kommando fuer ein Geraet. Rueckgabe ist
+   * ein cmd-Objekt oder null, wenn kein Zeitplan aktiv ist.
+   */
+  _getScheduleCommand(devId) {
+    const cfg = this.config || {};
+    const schedules = Array.isArray(cfg.schedules) ? cfg.schedules : [];
+    const activeEntries = schedules
+      .filter((entry) => entry.deviceId === devId && this._isScheduleActive(entry))
+      .sort((a, b) => this._timeToMinutes(a.start) - this._timeToMinutes(b.start));
+    if (!activeEntries.length) {
+      return null;
+    }
+    const entry = activeEntries[0];
+    const cmd = { power: true };
+    if (MODES.includes(entry.mode)) {
+      cmd.mode = entry.mode;
+    }
+    if (typeof entry.target === "number" && !Number.isNaN(entry.target)) {
+      cmd.targetTemperature = entry.target;
+    }
+    if (FAN_SPEEDS.includes(entry.fanSpeed)) {
+      cmd.fanSpeed = entry.fanSpeed;
+    }
+    if (SWINGS.includes(entry.swing)) {
+      cmd.swing = entry.swing;
+    }
+    return cmd;
+  }
+
+  /**
+   * Laeuft einmal pro Minute und wendet aktive Zeitplaene auf die Geraete an.
+   * Ein aktiver Zeitplan hat Vorrang vor der Hysterese-Regelung; diese wird
+   * innerhalb des Zeitfensters ausgesetzt, damit nicht gegen den Zeitplan
+   * geregelt wird.
+   */
+  async _runScheduleEngine() {
+    for (const [devId, dev] of this.devices.entries()) {
+      try {
+        const cmd = this._getScheduleCommand(devId);
+        const last = this._scheduleState.get(devId) || null;
+        if (cmd) {
+          // Zeitplan aktiv: Werte nur einmal oder bei Aenderung schreiben.
+          if (!last || JSON.stringify(last) !== JSON.stringify(cmd)) {
+            await dev.write(cmd);
+            this._scheduleState.set(devId, cmd);
+            this.log.info(`${dev.name}: Zeitplan aktiv → ${JSON.stringify(cmd)}`);
+          }
+          await this.setState(`device_${devId}.controlState`, "schedule", true);
+        } else {
+          // Kein Zeitplan aktiv: letzten Zeitplan-Zustand vergessen und
+          // Hysterese-Regelung laufen lassen (falls Regelung aktiv ist).
+          if (last) {
+            this._scheduleState.delete(devId);
+            const active = (await this.getStateAsync(`device_${devId}.controlActive`))?.val === true;
+            if (active) {
+              await this._runControl(dev, `device_${devId}`);
+            }
+          }
+        }
+      } catch (e) {
+        this.log.warn(`${dev.name}: Zeitplan-Ausfuehrung fehlgeschlagen - ${e.message}`);
+      }
+    }
+  }
+
+  /**
    * Reagiert auf Aenderungen der Instanz-Konfiguration (z. B. im Admin-UI).
    * Uebertraegt geaenderte Tabellenwerte sofort in die Regelungs-States,
    * ohne dass der Adapter neu gestartet werden muss.
@@ -494,7 +604,8 @@ class KlimaAdapter extends utils.Adapter {
 
       const active = dev.controlActive === true;
       const target = typeof dev.controlTarget === "number" ? dev.controlTarget : CONTROL_DEFAULTS.target;
-      const hysteresis = typeof dev.controlHysteresis === "number" ? dev.controlHysteresis : CONTROL_DEFAULTS.hysteresis;
+      const hysteresis =
+        typeof dev.controlHysteresis === "number" ? dev.controlHysteresis : CONTROL_DEFAULTS.hysteresis;
       const sensor = typeof dev.controlSensor === "string" ? dev.controlSensor : "";
 
       await this.setState(`${deviceId}.controlActive`, active, true);
@@ -527,6 +638,8 @@ class KlimaAdapter extends utils.Adapter {
       }
     }
     await this.setState("thermostat.globalActive", anyActive.length > 0, true);
+    // Konfigurationsaenderung kann Zeitplaene aktivieren/deaktivieren.
+    await this._runScheduleEngine();
   }
 
   /** Alle Geraete abfragen, States aktualisieren und ggf. Regelung ausfuehren. */
@@ -597,6 +710,12 @@ class KlimaAdapter extends utils.Adapter {
         }
       }
 
+      // Aktiver Zeitplan hat Vorrang vor der Hysterese-Regelung.
+      const scheduleCmd = this._getScheduleCommand(dev.id);
+      if (scheduleCmd) {
+        await this.setState(`${id}.controlState`, "schedule", true);
+        return;
+      }
       const active = (await this.getStateAsync(`${id}.controlActive`))?.val === true;
       if (!active) {
         await this.setState(`${id}.controlState`, "off", true);
@@ -957,6 +1076,10 @@ class KlimaAdapter extends utils.Adapter {
       this.clearInterval(entry.timer);
     }
     this._overrideTimers.clear();
+    if (this._scheduleTimer) {
+      this.clearInterval(this._scheduleTimer);
+      this._scheduleTimer = null;
+    }
     for (const dev of this.devices.values()) {
       try {
         await dev.disconnect();

@@ -92,6 +92,59 @@
           "xs": 12, "sm": 12, "md": 12, "lg": 12, "xl": 12
         }
       }
+    },
+    "scheduleTab": {
+      "type": "panel",
+      "label": "tabSchedule",
+      "items": {
+        "scheduleHint1": {
+          "type": "staticText",
+          "text": "scheduleHint1",
+          "xs": 12, "sm": 12, "md": 12, "lg": 12, "xl": 12
+        },
+        "schedules": {
+          "type": "table",
+          "label": "schedules",
+          "xs": 12, "sm": 12, "md": 12, "lg": 12, "xl": 12,
+          "items": [
+            { "type": "text", "attr": "name", "title": "scheduleName", "width": "10%", "filter": true, "sort": true, "default": "" },
+            { "type": "text", "attr": "deviceId", "title": "deviceId", "width": "10%", "filter": true, "sort": true, "default": "" },
+            { "type": "checkbox", "attr": "active", "title": "scheduleActive", "width": "5%", "default": false },
+            { "type": "checkbox", "attr": "mo", "title": "mo", "width": "3%", "default": true },
+            { "type": "checkbox", "attr": "tu", "title": "tu", "width": "3%", "default": true },
+            { "type": "checkbox", "attr": "we", "title": "we", "width": "3%", "default": true },
+            { "type": "checkbox", "attr": "th", "title": "th", "width": "3%", "default": true },
+            { "type": "checkbox", "attr": "fr", "title": "fr", "width": "3%", "default": true },
+            { "type": "checkbox", "attr": "sa", "title": "sa", "width": "3%", "default": true },
+            { "type": "checkbox", "attr": "su", "title": "su", "width": "3%", "default": true },
+            { "type": "text", "attr": "start", "title": "startTime", "width": "7%", "default": "06:00" },
+            { "type": "text", "attr": "end", "title": "endTime", "width": "7%", "default": "22:00" },
+            { "type": "select", "attr": "mode", "title": "mode", "width": "7%", "default": "auto",
+              "options": [
+                { "label": "Auto", "value": "auto" },
+                { "label": "Cool", "value": "cool" },
+                { "label": "Heat", "value": "heat" },
+                { "label": "Dry", "value": "dry" },
+                { "label": "Fan", "value": "fan" }
+              ] },
+            { "type": "number", "attr": "target", "title": "targetTemp", "width": "7%", "min": 16, "max": 31, "step": 0.5, "default": 22 },
+            { "type": "select", "attr": "fanSpeed", "title": "fanSpeed", "width": "8%", "default": "auto",
+              "options": [
+                { "label": "Auto", "value": "auto" },
+                { "label": "Low", "value": "low" },
+                { "label": "Medium", "value": "medium" },
+                { "label": "High", "value": "high" }
+              ] },
+            { "type": "select", "attr": "swing", "title": "swing", "width": "8%", "default": "off",
+              "options": [
+                { "label": "Off", "value": "off" },
+                { "label": "Vertical", "value": "vertical" },
+                { "label": "Horizontal", "value": "horizontal" },
+                { "label": "Both", "value": "both" }
+              ] }
+          ]
+        }
+      }
     }
   }
 }
