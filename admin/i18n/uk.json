@@ -20,5 +20,11 @@
   "controlState": "Control state",
   "tabControl": "Thermostat",
   "devicesTab": "Пристрої",
-  "thermostatHint": "Центральне керування термостатом доступне в об'єктах: klima.0.thermostat.globalActive та klima.0.thermostat.devices.<пристрій>.*"
+  "thermostatHint": "Центральне керування термостатом доступне в об'єктах: klima.0.thermostat.globalActive та klima.0.thermostat.devices.<пристрій>.*",
+  "globalOverride": "Глобальний Override термостата",
+  "override": "Ручний Override",
+  "overrideMode": "Режим Override",
+  "overrideTarget": "Цільова температура Override",
+  "overrideMinutes": "Тривалість Override (хв)",
+  "overrideRemaining": "Override залишилось (хв)"
 }

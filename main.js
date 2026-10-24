@@ -17,6 +17,7 @@ class KlimaAdapter extends utils.Adapter {
     this.on("unload", this._onUnload.bind(this));
     this.devices = new Map();
     this._pollTimer = null;
+    this._overrideTimers = new Map();
   }
 
   async onReady() {
@@ -243,9 +244,15 @@ class KlimaAdapter extends utils.Adapter {
   /**
    * Legt die zentrale Thermostat-Steuerung an:
    *   thermostat.globalActive            (Master-Schalter)
+   *   thermostat.globalOverride          (1h-Override fuer alle)
    *   thermostat.devices.<id>.active     (pro Geraet)
    *   thermostat.devices.<id>.target     (pro Geraet)
    *   thermostat.devices.<id>.hysteresis (pro Geraet)
+   *   thermostat.devices.<id>.override       (manueller Override)
+   *   thermostat.devices.<id>.overrideMode  (Zielmodus)
+   *   thermostat.devices.<id>.overrideTarget (Zieltemperatur)
+   *   thermostat.devices.<id>.overrideMinutes (Dauer in Minuten)
+   *   thermostat.devices.<id>.overrideRemaining (verbleibende Minuten, RO)
    */
   async _createThermostatObjects(list) {
     await this.extendObject("thermostat", { type: "channel", common: { name: "Thermostat" } });
@@ -253,6 +260,17 @@ class KlimaAdapter extends utils.Adapter {
       type: "state",
       common: {
         name: "Thermostat global active",
+        type: "boolean",
+        role: "switch.enable",
+        read: true,
+        write: true,
+        def: false,
+      },
+    });
+    await this.extendObject("thermostat.globalOverride", {
+      type: "state",
+      common: {
+        name: "Thermostat global override (1h)",
         type: "boolean",
         role: "switch.enable",
         read: true,
@@ -302,6 +320,63 @@ class KlimaAdapter extends utils.Adapter {
           def: CONTROL_DEFAULTS.hysteresis,
         },
       });
+      await this.extendObject(`${base}.override`, {
+        type: "state",
+        common: {
+          name: "Manual override",
+          type: "boolean",
+          role: "switch.enable",
+          read: true,
+          write: true,
+          def: false,
+        },
+      });
+      await this.extendObject(`${base}.overrideMode`, {
+        type: "state",
+        common: { name: "Override mode", type: "string", role: "state", read: true, write: true, def: "auto" },
+      });
+      await this.extendObject(`${base}.overrideTarget`, {
+        type: "state",
+        common: {
+          name: "Override target temperature",
+          type: "number",
+          role: "level.temperature",
+          unit: "°C",
+          read: true,
+          write: true,
+          min: 16,
+          max: 31,
+          step: 0.5,
+          def: CONTROL_DEFAULTS.target,
+        },
+      });
+      await this.extendObject(`${base}.overrideMinutes`, {
+        type: "state",
+        common: {
+          name: "Override duration (min)",
+          type: "number",
+          role: "level",
+          unit: "min",
+          read: true,
+          write: true,
+          min: 1,
+          max: 1440,
+          step: 1,
+          def: 60,
+        },
+      });
+      await this.extendObject(`${base}.overrideRemaining`, {
+        type: "state",
+        common: {
+          name: "Override remaining (min)",
+          type: "number",
+          role: "value",
+          unit: "min",
+          read: true,
+          write: false,
+          def: 0,
+        },
+      });
     }
   }
 
@@ -326,11 +401,17 @@ class KlimaAdapter extends utils.Adapter {
       await this.setState(`${thermoId}.active`, active, true);
       await this.setState(`${thermoId}.target`, target, true);
       await this.setState(`${thermoId}.hysteresis`, hysteresis, true);
+      await this.setState(`${thermoId}.override`, false, true);
+      await this.setState(`${thermoId}.overrideMode`, "auto", true);
+      await this.setState(`${thermoId}.overrideTarget`, CONTROL_DEFAULTS.target, true);
+      await this.setState(`${thermoId}.overrideMinutes`, 60, true);
+      await this.setState(`${thermoId}.overrideRemaining`, 0, true);
       if (active) {
         anyActive.push(dev.id);
       }
     }
     await this.setState("thermostat.globalActive", anyActive.length > 0, true);
+    await this.setState("thermostat.globalOverride", false, true);
   }
 
   /** Alle Geraete abfragen, States aktualisieren und ggf. Regelung ausfuehren. */
@@ -362,6 +443,12 @@ class KlimaAdapter extends utils.Adapter {
    */
   async _runControl(dev, id) {
     try {
+      const override = (await this.getStateAsync(`thermostat.devices.${dev.id}.override`))?.val === true;
+      if (override) {
+        await this.setState(`${id}.controlState`, "override", true);
+        return;
+      }
+
       const active = (await this.getStateAsync(`${id}.controlActive`))?.val === true;
       if (!active) {
         await this.setState(`${id}.controlState`, "off", true);
@@ -466,6 +553,11 @@ class KlimaAdapter extends utils.Adapter {
       return;
     }
 
+    if (relId === "thermostat.globalOverride") {
+      await this._setGlobalOverride(state.val === true);
+      return;
+    }
+
     if (relId.startsWith("thermostat.devices.")) {
       await this._handleThermostatDeviceState(relId, state.val);
       return;
@@ -522,11 +614,14 @@ class KlimaAdapter extends utils.Adapter {
   }
 
   /**
-   * Verarbeitet Aenderungen an thermostat.devices.<id>.{active,target,hysteresis}
-   * und schreibt sie auf die jeweiligen device_* control-States.
+   * Verarbeitet Aenderungen an thermostat.devices.<id>.{active,target,hysteresis,override,*}
+   * und schreibt sie auf die jeweiligen device_* control-States bzw.
+   * startet/stoppt einen Override-Timer.
    */
   async _handleThermostatDeviceState(relId, value) {
-    const match = relId.match(/^thermostat\.devices\.([^.]+)\.(active|target|hysteresis)$/);
+    const match = relId.match(
+      /^thermostat\.devices\.([^.]+)\.(active|target|hysteresis|override|overrideMode|overrideTarget|overrideMinutes)$/,
+    );
     if (!match) {
       return;
     }
@@ -537,14 +632,120 @@ class KlimaAdapter extends utils.Adapter {
     if (!dev) {
       return;
     }
-    const mapping = { active: "controlActive", target: "controlTarget", hysteresis: "controlHysteresis" };
-    const deviceChannel = mapping[field];
 
-    await this.setState(`${deviceId}.${deviceChannel}`, value, true);
+    if (["active", "target", "hysteresis"].includes(field)) {
+      const mapping = { active: "controlActive", target: "controlTarget", hysteresis: "controlHysteresis" };
+      const deviceChannel = mapping[field];
+      await this.setState(`${deviceId}.${deviceChannel}`, value, true);
+      await this.setState(relId, value, true);
+      await this._updateGlobalActiveFromDevices();
+      await this._runControl(dev, deviceId);
+      this.log.info(`${dev.name}: Thermostat ${field} = ${JSON.stringify(value)}`);
+      return;
+    }
+
+    // Override-Parameter: State setzen und ggf. Timer (neu) starten.
     await this.setState(relId, value, true);
-    await this._updateGlobalActiveFromDevices();
-    await this._runControl(dev, deviceId);
-    this.log.info(`${dev.name}: Thermostat ${field} = ${JSON.stringify(value)}`);
+    if (field === "override" && value === true) {
+      await this._startOverride(dev);
+    } else if (field === "override" && value === false) {
+      this._stopOverride(dev.id);
+      await this.setState(`thermostat.devices.${dev.id}.overrideRemaining`, 0, true);
+      await this._runControl(dev, deviceId);
+    } else if (["overrideMode", "overrideTarget"].includes(field)) {
+      // Nur wenn gerade ein Override läuft, sofort anwenden.
+      if (this._overrideTimers.has(dev.id)) {
+        await this._applyOverride(dev, false);
+      }
+    } else if (field === "overrideMinutes" && this._overrideTimers.has(dev.id)) {
+      // Laufzeit aendern: Timer neu starten, verstrichene Zeit erhalten.
+      await this._startOverride(dev);
+    }
+  }
+
+  /**
+   * Startet einen Override fuer ein Geraet: aktuelle Zielwerte auf das
+   * Geraet schreiben, Timer setzen und verbleibende Minuten herunterzaehlen.
+   */
+  async _startOverride(dev) {
+    const minutes = (await this.getStateAsync(`thermostat.devices.${dev.id}.overrideMinutes`))?.val ?? 60;
+    const durationMs = Math.max(1, Math.min(1440, Number(minutes) || 60)) * 60_000;
+    const endAt = Date.now() + durationMs;
+
+    this._stopOverride(dev.id);
+
+    await this._applyOverride(dev, true);
+
+    const timer = this.setInterval(async () => {
+      const remaining = Math.max(0, Math.ceil((endAt - Date.now()) / 60_000));
+      await this.setState(`thermostat.devices.${dev.id}.overrideRemaining`, remaining, true);
+      if (remaining <= 0) {
+        this._stopOverride(dev.id);
+        await this.setState(`thermostat.devices.${dev.id}.override`, false, true);
+        await this.setState(`thermostat.devices.${dev.id}.overrideRemaining`, 0, true);
+        await this.setState(`thermostat.globalOverride`, false, true);
+        await this._runControl(dev, `device_${dev.id}`);
+        this.log.info(`${dev.name}: Override abgelaufen - Automatik uebernommen`);
+      }
+    }, 60_000);
+
+    this._overrideTimers.set(dev.id, { timer, endAt });
+    await this.setState(`thermostat.devices.${dev.id}.overrideRemaining`, Math.ceil(durationMs / 60_000), true);
+  }
+
+  /**
+   * Bricht den Override-Timer fuer ein Geraet ab.
+   */
+  _stopOverride(devId) {
+    const entry = this._overrideTimers.get(devId);
+    if (entry) {
+      this.clearInterval(entry.timer);
+      this._overrideTimers.delete(devId);
+    }
+  }
+
+  /**
+   * Wendet die Override-Parameter auf das Geraet an.
+   */
+  async _applyOverride(dev, setOverrideState = true) {
+    const mode = (await this.getStateAsync(`thermostat.devices.${dev.id}.overrideMode`))?.val || "auto";
+    const target =
+      (await this.getStateAsync(`thermostat.devices.${dev.id}.overrideTarget`))?.val ?? CONTROL_DEFAULTS.target;
+    const cmd = { power: true };
+    if (mode !== "no change" && mode) {
+      cmd.mode = mode;
+    }
+    if (typeof target === "number" && !Number.isNaN(target)) {
+      cmd.targetTemperature = target;
+    }
+    try {
+      await dev.write(cmd);
+      if (setOverrideState) {
+        await this.setState(`thermostat.devices.${dev.id}.override`, true, true);
+      }
+      this.log.info(`${dev.name}: Override angewendet → ${JSON.stringify(cmd)}`);
+    } catch (e) {
+      this.log.warn(`${dev.name}: Override konnte nicht angewendet werden - ${e.message}`);
+    }
+  }
+
+  /**
+   * Setzt den globalen Override-Schalter fuer alle Geraete.
+   */
+  async _setGlobalOverride(value) {
+    await this.setState("thermostat.globalOverride", value, true);
+    for (const [devId, dev] of this.devices.entries()) {
+      if (value) {
+        await this.setState(`thermostat.devices.${devId}.override`, true, true);
+        await this._startOverride(dev);
+      } else {
+        await this.setState(`thermostat.devices.${devId}.override`, false, true);
+        await this.setState(`thermostat.devices.${devId}.overrideRemaining`, 0, true);
+        this._stopOverride(devId);
+        await this._runControl(dev, `device_${devId}`);
+      }
+    }
+    this.log.info(`Override global ${value ? "aktiviert" : "deaktiviert"}`);
   }
 
   /**
@@ -595,6 +796,10 @@ class KlimaAdapter extends utils.Adapter {
       this.clearInterval(this._pollTimer);
       this._pollTimer = null;
     }
+    for (const entry of this._overrideTimers.values()) {
+      this.clearInterval(entry.timer);
+    }
+    this._overrideTimers.clear();
     for (const dev of this.devices.values()) {
       try {
         await dev.disconnect();

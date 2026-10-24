@@ -20,5 +20,11 @@
   "controlState": "Control state",
   "tabControl": "Thermostat",
   "devicesTab": "Devices",
-  "thermostatHint": "Central thermostat control is available at objects: klima.0.thermostat.globalActive and klima.0.thermostat.devices.<device>.*"
+  "thermostatHint": "Central thermostat control is available at objects: klima.0.thermostat.globalActive and klima.0.thermostat.devices.<device>.*",
+  "globalOverride": "Thermostat global override",
+  "override": "Manual override",
+  "overrideMode": "Override mode",
+  "overrideTarget": "Override target temperature",
+  "overrideMinutes": "Override duration (min)",
+  "overrideRemaining": "Override remaining (min)"
 }

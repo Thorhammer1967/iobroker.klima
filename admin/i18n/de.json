@@ -20,5 +20,11 @@
   "controlState": "Regelungszustand",
   "tabControl": "Thermostat",
   "devicesTab": "Geräte",
-  "thermostatHint": "Die zentrale Thermostat-Steuerung findest du unter den Objekten: klima.0.thermostat.globalActive und klima.0.thermostat.devices.<Gerät>.*"
+  "thermostatHint": "Die zentrale Thermostat-Steuerung findest du unter den Objekten: klima.0.thermostat.globalActive und klima.0.thermostat.devices.<Gerät>.*",
+  "globalOverride": "Thermostat globaler Override",
+  "override": "Manueller Override",
+  "overrideMode": "Override Modus",
+  "overrideTarget": "Override Solltemperatur",
+  "overrideMinutes": "Override Dauer (Min)",
+  "overrideRemaining": "Override verbleibend (Min)"
 }

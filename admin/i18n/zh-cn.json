@@ -20,5 +20,11 @@
   "controlState": "Control state",
   "tabControl": "Thermostat",
   "devicesTab": "设备",
-  "thermostatHint": "中央恒温控制可在以下对象中使用: klima.0.thermostat.globalActive 和 klima.0.thermostat.devices.<设备>.*"
+  "thermostatHint": "中央恒温控制可在以下对象中使用: klima.0.thermostat.globalActive 和 klima.0.thermostat.devices.<设备>.*",
+  "globalOverride": "全局恒温覆盖",
+  "override": "手动覆盖",
+  "overrideMode": "覆盖模式",
+  "overrideTarget": "覆盖目标温度",
+  "overrideMinutes": "覆盖时长（分）",
+  "overrideRemaining": "覆盖剩余（分）"
 }

@@ -20,5 +20,11 @@
   "controlState": "Control state",
   "tabControl": "Thermostat",
   "devicesTab": "Apparaten",
-  "thermostatHint": "Centrale thermostaatregeling is beschikbaar in objecten: klima.0.thermostat.globalActive en klima.0.thermostat.devices.<apparaat>.*"
+  "thermostatHint": "Centrale thermostaatregeling is beschikbaar in objecten: klima.0.thermostat.globalActive en klima.0.thermostat.devices.<apparaat>.*",
+  "globalOverride": "Globale thermostaat-override",
+  "override": "Handmatige override",
+  "overrideMode": "Override-modus",
+  "overrideTarget": "Override doeltemperatuur",
+  "overrideMinutes": "Override-duur (min)",
+  "overrideRemaining": "Override-resterend (min)"
 }

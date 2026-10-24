@@ -20,5 +20,11 @@
   "controlState": "Control state",
   "tabControl": "Thermostat",
   "devicesTab": "Urządzenia",
-  "thermostatHint": "Centralne sterowanie termostatem jest dostępne w obiektach: klima.0.thermostat.globalActive oraz klima.0.thermostat.devices.<urządzenie>.*"
+  "thermostatHint": "Centralne sterowanie termostatem jest dostępne w obiektach: klima.0.thermostat.globalActive oraz klima.0.thermostat.devices.<urządzenie>.*",
+  "globalOverride": "Globalne nadpisanie termostatu",
+  "override": "Ręczne nadpisanie",
+  "overrideMode": "Tryb nadpisania",
+  "overrideTarget": "Nadpisana temperatura docelowa",
+  "overrideMinutes": "Czas nadpisania (min)",
+  "overrideRemaining": "Pozostało nadpisania (min)"
 }
