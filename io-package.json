@@ -1,7 +1,7 @@
 {
   "common": {
     "name": "klima",
-    "version": "0.1.0",
+    "version": "0.1.1",
     "titleLang": {
       "en": "Klima",
       "de": "Klima",
@@ -65,6 +65,10 @@
       }
     ],
     "news": {
+      "0.1.1": {
+        "en": "Added global thermostat tab in admin UI, per-device overrides with auto-restore and remote-control cancel.",
+        "de": "Neuer globaler Thermostat-Reiter im Admin-UI, pro-Geraet-Override mit automatischer Rueckkehr und Fernbedienungs-Abbruch."
+      },
       "0.1.0": {
         "en": "Initial release: controls Midea and Tuya air conditioners via LAN without cloud.",
         "de": "Erstveroeffentlichung: Steuerung von Midea- und Tuya-Klimageraeten ueber LAN ohne Cloud.",
