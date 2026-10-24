@@ -26,5 +26,13 @@
   "overrideMode": "Tryb nadpisania",
   "overrideTarget": "Nadpisana temperatura docelowa",
   "overrideMinutes": "Czas nadpisania (min)",
-  "overrideRemaining": "Pozostało nadpisania (min)"
+  "overrideRemaining": "Pozostało nadpisania (min)",
+  "thermostatHint1": "Globalne sterowanie termostatem. Włącza/wyłącza regulację dla wszystkich urządzeń.",
+  "globalThermostatActive": "Termostat globalnie aktywny",
+  "thermostatHint2": "Globalne nadpisanie: włącza tryb ręczny dla wszystkich urządzeń z poniższymi wartościami domyślnymi.",
+  "globalOverrideActive": "Globalne nadpisanie aktywne",
+  "defaultOverrideMinutes": "Czas nadpisania (min)",
+  "defaultOverrideMode": "Tryb nadpisania",
+  "defaultOverrideTarget": "Nadpisana temperatura docelowa",
+  "thermostatHint3": "Wartości dla poszczególnych urządzeń (regulacja aktywna, temp. docelowa, histereza, override, czujnik zewnętrzny) znajdują się w obiektach klima.0.device_* oraz klima.0.thermostat.devices.*."
 }

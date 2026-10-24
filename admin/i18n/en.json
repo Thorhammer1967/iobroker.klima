@@ -26,5 +26,13 @@
   "overrideMode": "Override mode",
   "overrideTarget": "Override target temperature",
   "overrideMinutes": "Override duration (min)",
-  "overrideRemaining": "Override remaining (min)"
+  "overrideRemaining": "Override remaining (min)",
+  "thermostatHint1": "Global thermostat control. Enables/disables regulation for all devices.",
+  "globalThermostatActive": "Thermostat globally active",
+  "thermostatHint2": "Global override: activates manual mode for all devices with the default values below.",
+  "globalOverrideActive": "Global override active",
+  "defaultOverrideMinutes": "Override duration (min)",
+  "defaultOverrideMode": "Override mode",
+  "defaultOverrideTarget": "Override target temperature",
+  "thermostatHint3": "Per-device values (control active, target temp, hysteresis, override, external sensor) are available at objects klima.0.device_* and klima.0.thermostat.devices.*."
 }

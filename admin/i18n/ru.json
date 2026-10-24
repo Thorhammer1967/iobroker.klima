@@ -26,5 +26,13 @@
   "overrideMode": "Режим Override",
   "overrideTarget": "Целевая температура Override",
   "overrideMinutes": "Длительность Override (мин)",
-  "overrideRemaining": "Override осталось (мин)"
+  "overrideRemaining": "Override осталось (мин)",
+  "thermostatHint1": "Глобальное управление термостатом. Включает/отключает регулирование для всех устройств.",
+  "globalThermostatActive": "Термостат глобально активен",
+  "thermostatHint2": "Глобальный Override: активирует ручной режим для всех устройств со значениями по умолчанию ниже.",
+  "globalOverrideActive": "Глобальный Override активен",
+  "defaultOverrideMinutes": "Длительность Override (мин)",
+  "defaultOverrideMode": "Режим Override",
+  "defaultOverrideTarget": "Целевая температура Override",
+  "thermostatHint3": "Значения для каждого устройства (регулирование активно, целевая темп., гистерезис, Override, внешний датчик) находятся в объектах klima.0.device_* и klima.0.thermostat.devices.*."
 }

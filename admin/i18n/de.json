@@ -26,5 +26,13 @@
   "overrideMode": "Override Modus",
   "overrideTarget": "Override Solltemperatur",
   "overrideMinutes": "Override Dauer (Min)",
-  "overrideRemaining": "Override verbleibend (Min)"
+  "overrideRemaining": "Override verbleibend (Min)",
+  "thermostatHint1": "Globale Thermostat-Steuerung. Aktiviert/deaktiviert die Regelung für alle Geräte.",
+  "globalThermostatActive": "Thermostat global aktiv",
+  "thermostatHint2": "Globaler Override: Aktiviert für alle Geräte einen manuellen Modus mit den untenstehenden Default-Werten.",
+  "globalOverrideActive": "Globaler Override aktiv",
+  "defaultOverrideMinutes": "Override-Dauer (Min)",
+  "defaultOverrideMode": "Override-Modus",
+  "defaultOverrideTarget": "Override-Solltemperatur",
+  "thermostatHint3": "Pro-Gerät-Werte (Regelung aktiv, Solltemperatur, Hysterese, Override, externer Sensor) liegen unter den Objekten klima.0.device_* und klima.0.thermostat.devices.*."
 }

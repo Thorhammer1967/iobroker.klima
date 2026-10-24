@@ -383,10 +383,17 @@ class KlimaAdapter extends utils.Adapter {
 
   /**
    * Synchronisiert die zentrale Thermostat-Steuerung mit den Geraete-
-   * Regelungs-States beim Start.
+   * Regelungs-States beim Start und wendet die Admin-UI-Defaults an.
    */
   async _initThermostatDefaults(list) {
     const anyActive = [];
+    const cfg = this.config || {};
+    const overrideDefaults = {
+      mode: cfg.defaultOverrideMode || "auto",
+      target: typeof cfg.defaultOverrideTarget === "number" ? cfg.defaultOverrideTarget : CONTROL_DEFAULTS.target,
+      minutes: typeof cfg.defaultOverrideMinutes === "number" ? cfg.defaultOverrideMinutes : 60,
+    };
+
     for (const dev of list) {
       if (!dev || !dev.id) {
         continue;
@@ -402,17 +409,27 @@ class KlimaAdapter extends utils.Adapter {
       await this.setState(`${thermoId}.active`, active, true);
       await this.setState(`${thermoId}.target`, target, true);
       await this.setState(`${thermoId}.hysteresis`, hysteresis, true);
-      await this.setState(`${thermoId}.override`, false, true);
-      await this.setState(`${thermoId}.overrideMode`, "auto", true);
-      await this.setState(`${thermoId}.overrideTarget`, CONTROL_DEFAULTS.target, true);
-      await this.setState(`${thermoId}.overrideMinutes`, 60, true);
-      await this.setState(`${thermoId}.overrideRemaining`, 0, true);
+      const existingOverride = await this.getStateAsync(`${thermoId}.override`);
+      await this.setState(`${thermoId}.override`, existingOverride?.val === true, true);
+      await this.setState(`${thermoId}.overrideMode`, overrideDefaults.mode, true);
+      await this.setState(`${thermoId}.overrideTarget`, overrideDefaults.target, true);
+      await this.setState(`${thermoId}.overrideMinutes`, overrideDefaults.minutes, true);
+      const remaining = await this.getStateAsync(`${thermoId}.overrideRemaining`);
+      await this.setState(`${thermoId}.overrideRemaining`, remaining?.val ?? 0, true);
       if (active) {
         anyActive.push(dev.id);
       }
     }
     await this.setState("thermostat.globalActive", anyActive.length > 0, true);
     await this.setState("thermostat.globalOverride", false, true);
+
+    // Admin-UI Defaults anwenden, falls gesetzt.
+    if (cfg.globalThermostatActive === true) {
+      await this._setGlobalActive(true);
+    }
+    if (cfg.globalOverrideActive === true) {
+      await this._setGlobalOverride(true);
+    }
   }
 
   /** Alle Geraete abfragen, States aktualisieren und ggf. Regelung ausfuehren. */

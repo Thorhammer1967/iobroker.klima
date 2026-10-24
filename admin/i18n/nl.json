@@ -26,5 +26,13 @@
   "overrideMode": "Override-modus",
   "overrideTarget": "Override doeltemperatuur",
   "overrideMinutes": "Override-duur (min)",
-  "overrideRemaining": "Override-resterend (min)"
+  "overrideRemaining": "Override-resterend (min)",
+  "thermostatHint1": "Globale thermostaatregeling. Schakelt de regeling in/uit voor alle apparaten.",
+  "globalThermostatActive": "Thermostaat globaal actief",
+  "thermostatHint2": "Globale override: activeert de handmatige modus voor alle apparaten met de onderstaande standaardwaarden.",
+  "globalOverrideActive": "Globale override actief",
+  "defaultOverrideMinutes": "Override-duur (min)",
+  "defaultOverrideMode": "Override-modus",
+  "defaultOverrideTarget": "Override doeltemperatuur",
+  "thermostatHint3": "Per-apparaatwaarden (regeling actief, doeltemp, hysterese, override, externe sensor) zijn beschikbaar in objecten klima.0.device_* en klima.0.thermostat.devices.*."
 }

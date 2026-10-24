@@ -26,5 +26,13 @@
   "overrideMode": "Modalità override",
   "overrideTarget": "Temperatura target override",
   "overrideMinutes": "Durata override (min)",
-  "overrideRemaining": "Override rimanente (min)"
+  "overrideRemaining": "Override rimanente (min)",
+  "thermostatHint1": "Controllo termostato globale. Attiva/disattiva la regolazione per tutti i dispositivi.",
+  "globalThermostatActive": "Termostato globalmente attivo",
+  "thermostatHint2": "Override globale: attiva la modalità manuale per tutti i dispositivi con i valori predefiniti sottostanti.",
+  "globalOverrideActive": "Override globale attivo",
+  "defaultOverrideMinutes": "Durata override (min)",
+  "defaultOverrideMode": "Modalità override",
+  "defaultOverrideTarget": "Temperatura target override",
+  "thermostatHint3": "I valori per dispositivo (controllo attivo, temp. target, isteresi, override, sensore esterno) sono negli oggetti klima.0.device_* e klima.0.thermostat.devices.*."
 }

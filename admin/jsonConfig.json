@@ -33,9 +33,56 @@
       "type": "panel",
       "label": "tabControl",
       "items": {
-        "thermostatHint": {
+        "thermostatHint1": {
           "type": "staticText",
-          "text": "thermostatHint",
+          "text": "thermostatHint1",
+          "xs": 12, "sm": 12, "md": 12, "lg": 12, "xl": 12
+        },
+        "globalThermostatActive": {
+          "type": "checkbox",
+          "label": "globalThermostatActive",
+          "xs": 12, "sm": 6, "md": 4, "lg": 3, "xl": 2,
+          "default": false
+        },
+        "thermostatHint2": {
+          "type": "staticText",
+          "text": "thermostatHint2",
+          "xs": 12, "sm": 12, "md": 12, "lg": 12, "xl": 12
+        },
+        "globalOverrideActive": {
+          "type": "checkbox",
+          "label": "globalOverrideActive",
+          "xs": 12, "sm": 6, "md": 4, "lg": 3, "xl": 2,
+          "default": false
+        },
+        "defaultOverrideMinutes": {
+          "type": "number",
+          "label": "defaultOverrideMinutes",
+          "xs": 12, "sm": 6, "md": 4, "lg": 3, "xl": 2,
+          "min": 1, "max": 1440, "step": 1, "default": 60
+        },
+        "defaultOverrideMode": {
+          "type": "select",
+          "label": "defaultOverrideMode",
+          "xs": 12, "sm": 6, "md": 4, "lg": 3, "xl": 2,
+          "default": "auto",
+          "options": [
+            { "label": "Auto", "value": "auto" },
+            { "label": "Cool", "value": "cool" },
+            { "label": "Heat", "value": "heat" },
+            { "label": "Dry", "value": "dry" },
+            { "label": "Fan", "value": "fan" }
+          ]
+        },
+        "defaultOverrideTarget": {
+          "type": "number",
+          "label": "defaultOverrideTarget",
+          "xs": 12, "sm": 6, "md": 4, "lg": 3, "xl": 2,
+          "min": 16, "max": 31, "step": 0.5, "default": 22
+        },
+        "thermostatHint3": {
+          "type": "staticText",
+          "text": "thermostatHint3",
           "xs": 12, "sm": 12, "md": 12, "lg": 12, "xl": 12
         }
       }

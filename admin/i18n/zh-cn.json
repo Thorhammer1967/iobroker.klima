@@ -26,5 +26,13 @@
   "overrideMode": "覆盖模式",
   "overrideTarget": "覆盖目标温度",
   "overrideMinutes": "覆盖时长（分）",
-  "overrideRemaining": "覆盖剩余（分）"
+  "overrideRemaining": "覆盖剩余（分）",
+  "thermostatHint1": "全局恒温控制。启用/禁用所有设备的调节。",
+  "globalThermostatActive": "恒温器全局激活",
+  "thermostatHint2": "全局覆盖：使用以下默认值对所有设备激活手动模式。",
+  "globalOverrideActive": "全局覆盖激活",
+  "defaultOverrideMinutes": "覆盖时长（分）",
+  "defaultOverrideMode": "覆盖模式",
+  "defaultOverrideTarget": "覆盖目标温度",
+  "thermostatHint3": "每个设备的值（控制激活、目标温度、滞后、覆盖、外部传感器）位于对象 klima.0.device_* 和 klima.0.thermostat.devices.* 下。"
 }

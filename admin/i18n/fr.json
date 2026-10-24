@@ -26,5 +26,13 @@
   "overrideMode": "Mode d'override",
   "overrideTarget": "Température cible override",
   "overrideMinutes": "Durée override (min)",
-  "overrideRemaining": "Override restant (min)"
+  "overrideRemaining": "Override restant (min)",
+  "thermostatHint1": "Contrôle global du thermostat. Active/désactive la régulation pour tous les appareils.",
+  "globalThermostatActive": "Thermostat globalement actif",
+  "thermostatHint2": "Override global: active le mode manuel pour tous les appareils avec les valeurs par défaut ci-dessous.",
+  "globalOverrideActive": "Override global actif",
+  "defaultOverrideMinutes": "Durée override (min)",
+  "defaultOverrideMode": "Mode override",
+  "defaultOverrideTarget": "Température cible override",
+  "thermostatHint3": "Les valeurs par appareil (régulation active, temp. cible, hystérésis, override, capteur externe) sont dans les objets klima.0.device_* et klima.0.thermostat.devices.*."
 }
