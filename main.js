@@ -15,6 +15,7 @@ class KlimaAdapter extends utils.Adapter {
     super({ ...utils.AdapterOptions, name: "klima" });
     this.on("ready", this.onReady.bind(this));
     this.on("unload", this._onUnload.bind(this));
+    this.on("objectChange", this._onObjectChange.bind(this));
     this.devices = new Map();
     this._pollTimer = null;
     this._overrideTimers = new Map();
@@ -446,6 +447,86 @@ class KlimaAdapter extends utils.Adapter {
     if (cfg.globalOverrideActive === true) {
       await this._setGlobalOverride(true);
     }
+  }
+
+  /**
+   * Reagiert auf Aenderungen der Instanz-Konfiguration (z. B. im Admin-UI).
+   * Uebertraegt geaenderte Tabellenwerte sofort in die Regelungs-States,
+   * ohne dass der Adapter neu gestartet werden muss.
+   */
+  async _onObjectChange(id, obj) {
+    if (id !== `system.adapter.${this.namespace}` || !obj || !obj.native) {
+      return;
+    }
+    this.log.info("Instanz-Konfiguration geaendert - synchronisiere Werte.");
+    this.config = obj.native;
+    const cfg = this.config || {};
+    const list = Array.isArray(cfg.devices) ? cfg.devices : [];
+    if (!list.length) {
+      return;
+    }
+    const secret = await this.getSystemSecret();
+    for (const dev of list) {
+      for (const key of ["token", "key", "localKey"]) {
+        dev[key] = this._decryptIfNeeded(dev[key], secret);
+      }
+    }
+    await this._syncConfigToStates(list);
+  }
+
+  /**
+   * Schreibt die aktuellen Werte aus der Admin-UI-Geraetetabelle in die
+   * Regelungs-States. Laufende Overrides werden dabei nicht unterbrochen,
+   * neu aktivierte Overrides starten sofort.
+   */
+  async _syncConfigToStates(list) {
+    const anyActive = [];
+    for (const dev of list) {
+      if (!dev || !dev.id) {
+        continue;
+      }
+      const instance = this.devices.get(dev.id);
+      if (!instance) {
+        continue;
+      }
+      const deviceId = `device_${dev.id}`;
+      const thermoId = `thermostat.devices.${dev.id}`;
+
+      const active = dev.controlActive === true;
+      const target = typeof dev.controlTarget === "number" ? dev.controlTarget : CONTROL_DEFAULTS.target;
+      const hysteresis = typeof dev.controlHysteresis === "number" ? dev.controlHysteresis : CONTROL_DEFAULTS.hysteresis;
+      const sensor = typeof dev.controlSensor === "string" ? dev.controlSensor : "";
+
+      await this.setState(`${deviceId}.controlActive`, active, true);
+      await this.setState(`${deviceId}.controlTarget`, target, true);
+      await this.setState(`${deviceId}.controlHysteresis`, hysteresis, true);
+      await this.setState(`${deviceId}.controlSensor`, sensor, true);
+
+      await this.setState(`${thermoId}.active`, active, true);
+      await this.setState(`${thermoId}.target`, target, true);
+      await this.setState(`${thermoId}.hysteresis`, hysteresis, true);
+
+      const overrideActive = dev.override === true;
+      const overrideMode = dev.overrideMode || "auto";
+      const overrideTarget = typeof dev.overrideTarget === "number" ? dev.overrideTarget : target;
+      const overrideMinutes = typeof dev.overrideMinutes === "number" ? dev.overrideMinutes : 60;
+
+      await this.setState(`${thermoId}.override`, overrideActive, true);
+      await this.setState(`${thermoId}.overrideMode`, overrideMode, true);
+      await this.setState(`${thermoId}.overrideTarget`, overrideTarget, true);
+      await this.setState(`${thermoId}.overrideMinutes`, overrideMinutes, true);
+
+      if (overrideActive) {
+        await this._startOverride(instance);
+      } else {
+        this._stopOverride(dev.id);
+      }
+
+      if (active) {
+        anyActive.push(dev.id);
+      }
+    }
+    await this.setState("thermostat.globalActive", anyActive.length > 0, true);
   }
 
   /** Alle Geraete abfragen, States aktualisieren und ggf. Regelung ausfuehren. */
