@@ -70,7 +70,7 @@ class KlimaAdapter extends utils.Adapter {
       const type = dev.type === "tuya" ? "tuya" : "midea";
       let instance;
       try {
-        instance = type === "tuya" ? new TuyaClimateDevice(dev, this.log) : new MideaDevice(dev, this.log);
+        instance = type === "tuya" ? new TuyaClimateDevice(dev, this.log, this) : new MideaDevice(dev, this.log, this);
       } catch (e) {
         this.log.error(`Geraet ${dev.name || dev.id} (${type}) konnte nicht erstellt werden: ${e.message}`);
         continue;
@@ -83,7 +83,7 @@ class KlimaAdapter extends utils.Adapter {
 
     await this._pollAll();
 
-    this._pollTimer = setInterval(() => {
+    this._pollTimer = this.setInterval(() => {
       this._pollAll().catch((e) => this.log.error(`Abfrage fehlgeschlagen: ${e.message}`));
     }, pollInterval);
 
@@ -246,7 +246,7 @@ class KlimaAdapter extends utils.Adapter {
 
   async _onUnload(callback) {
     if (this._pollTimer) {
-      clearInterval(this._pollTimer);
+      this.clearInterval(this._pollTimer);
       this._pollTimer = null;
     }
     for (const dev of this.devices.values()) {
