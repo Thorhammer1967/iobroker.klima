@@ -217,8 +217,8 @@ class KlimaAdapter extends utils.Adapter {
 
   /**
    * Uebertraegt die in der Tabelle hinterlegten Regelungs-Defaults
-   * (controlActive, controlTarget, controlHysteresis) auf die States,
-   * falls diese noch nie gesetzt wurden.
+   * (controlActive, controlTarget, controlHysteresis, controlSensor) auf die
+   * States, falls diese noch nie gesetzt wurden.
    */
   async _initControlDefaults(list) {
     for (const dev of list) {
@@ -231,6 +231,7 @@ class KlimaAdapter extends utils.Adapter {
         controlTarget: typeof dev.controlTarget === "number" ? dev.controlTarget : CONTROL_DEFAULTS.target,
         controlHysteresis:
           typeof dev.controlHysteresis === "number" ? dev.controlHysteresis : CONTROL_DEFAULTS.hysteresis,
+        controlSensor: typeof dev.controlSensor === "string" ? dev.controlSensor : "",
       };
       for (const [key, value] of Object.entries(defaults)) {
         const state = await this.getStateAsync(`${id}.${key}`);
@@ -400,6 +401,10 @@ class KlimaAdapter extends utils.Adapter {
       }
       const deviceId = `device_${dev.id}`;
       const thermoId = `thermostat.devices.${dev.id}`;
+      const instance = this.devices.get(dev.id);
+      if (!instance) {
+        continue;
+      }
 
       const active = (await this.getStateAsync(`${deviceId}.controlActive`))?.val === true;
       const target = (await this.getStateAsync(`${deviceId}.controlTarget`))?.val ?? CONTROL_DEFAULTS.target;
@@ -409,13 +414,24 @@ class KlimaAdapter extends utils.Adapter {
       await this.setState(`${thermoId}.active`, active, true);
       await this.setState(`${thermoId}.target`, target, true);
       await this.setState(`${thermoId}.hysteresis`, hysteresis, true);
-      const existingOverride = await this.getStateAsync(`${thermoId}.override`);
-      await this.setState(`${thermoId}.override`, existingOverride?.val === true, true);
-      await this.setState(`${thermoId}.overrideMode`, overrideDefaults.mode, true);
-      await this.setState(`${thermoId}.overrideTarget`, overrideDefaults.target, true);
-      await this.setState(`${thermoId}.overrideMinutes`, overrideDefaults.minutes, true);
+
+      // Pro-Geraet-Override-Werte aus der Tabelle; Admin-Defaults als Fallback.
+      const devOverride = dev.override === true;
+      const devMode = dev.overrideMode || overrideDefaults.mode;
+      const devTarget = typeof dev.overrideTarget === "number" ? dev.overrideTarget : overrideDefaults.target;
+      const devMinutes = typeof dev.overrideMinutes === "number" ? dev.overrideMinutes : overrideDefaults.minutes;
+
+      await this.setState(`${thermoId}.override`, devOverride, true);
+      await this.setState(`${thermoId}.overrideMode`, devMode, true);
+      await this.setState(`${thermoId}.overrideTarget`, devTarget, true);
+      await this.setState(`${thermoId}.overrideMinutes`, devMinutes, true);
       const remaining = await this.getStateAsync(`${thermoId}.overrideRemaining`);
       await this.setState(`${thermoId}.overrideRemaining`, remaining?.val ?? 0, true);
+
+      if (devOverride) {
+        await this._startOverride(instance);
+      }
+
       if (active) {
         anyActive.push(dev.id);
       }

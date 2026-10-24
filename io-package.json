@@ -1,7 +1,7 @@
 {
   "common": {
     "name": "klima",
-    "version": "0.1.1",
+    "version": "0.1.2",
     "titleLang": {
       "en": "Klima",
       "de": "Klima",
@@ -65,6 +65,10 @@
       }
     ],
     "news": {
+      "0.1.2": {
+        "en": "Per-device thermostat settings are now editable directly in the admin UI device table.",
+        "de": "Pro-Geraet-Thermostat-Einstellungen sind jetzt direkt in der Admin-UI-Geraetetabelle editierbar."
+      },
       "0.1.1": {
         "en": "Added global thermostat tab in admin UI, per-device overrides with auto-restore and remote-control cancel.",
         "de": "Neuer globaler Thermostat-Reiter im Admin-UI, pro-Geraet-Override mit automatischer Rueckkehr und Fernbedienungs-Abbruch."

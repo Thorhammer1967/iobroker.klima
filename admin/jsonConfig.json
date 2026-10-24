@@ -21,10 +21,16 @@
             { "type": "password", "attr": "token", "title": "token", "width": "12%", "default": "" },
             { "type": "password", "attr": "key", "title": "key", "width": "12%", "default": "" },
             { "type": "password", "attr": "localKey", "title": "localKey", "width": "12%", "default": "" },
-            { "type": "text", "attr": "version", "title": "version", "width": "7%", "default": "" },
-            { "type": "checkbox", "attr": "controlActive", "title": "controlActive", "width": "6%", "default": false },
-            { "type": "number", "attr": "controlTarget", "title": "controlTarget", "width": "6%", "min": 16, "max": 31, "step": 0.5, "default": 22 },
-            { "type": "number", "attr": "controlHysteresis", "title": "controlHysteresis", "width": "7%", "min": 0, "max": 5, "step": 0.1, "default": 0.5 }
+            { "type": "text", "attr": "version", "title": "version", "width": "5%", "default": "" },
+            { "type": "checkbox", "attr": "controlActive", "title": "controlActive", "width": "5%", "default": false },
+            { "type": "number", "attr": "controlTarget", "title": "controlTarget", "width": "5%", "min": 16, "max": 31, "step": 0.5, "default": 22 },
+            { "type": "number", "attr": "controlHysteresis", "title": "controlHysteresis", "width": "6%", "min": 0, "max": 5, "step": 0.1, "default": 0.5 },
+            { "type": "text", "attr": "controlSensor", "title": "controlSensor", "width": "10%", "default": "" },
+            { "type": "checkbox", "attr": "override", "title": "override", "width": "5%", "default": false },
+            { "type": "select", "attr": "overrideMode", "title": "overrideMode", "width": "6%", "default": "auto",
+              "options": [ { "label": "Auto", "value": "auto" }, { "label": "Cool", "value": "cool" }, { "label": "Heat", "value": "heat" }, { "label": "Dry", "value": "dry" }, { "label": "Fan", "value": "fan" } ] },
+            { "type": "number", "attr": "overrideTarget", "title": "overrideTarget", "width": "6%", "min": 16, "max": 31, "step": 0.5, "default": 22 },
+            { "type": "number", "attr": "overrideMinutes", "title": "overrideMinutes", "width": "6%", "min": 1, "max": 1440, "step": 1, "default": 60 }
           ]
         }
       }
