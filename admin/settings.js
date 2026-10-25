@@ -161,7 +161,9 @@ function triggerChange() {
 
 function getDeviceNames() {
   const devices = Array.isArray(gSettings.devices) ? gSettings.devices : [];
-  return devices.filter((d) => d && d.name).map((d) => d.name);
+  return devices
+    .map((d) => (d && (d.name || d.id) ? d.name || d.id : ""))
+    .filter(Boolean);
 }
 
 function wrap(el) {
