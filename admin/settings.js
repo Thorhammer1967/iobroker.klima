@@ -278,23 +278,26 @@ function renderSchedules() {
     };
 
     const devTd = document.createElement("td");
-    const devInput = document.createElement("input");
-    devInput.type = "text";
-    devInput.className = "sch-device";
-    devInput.value = entry.deviceName || "";
-    devInput.setAttribute("list", "klima-device-list");
-    devInput.addEventListener("change", onChangeFn);
-    devTd.appendChild(devInput);
-    if (!document.getElementById("klima-device-list")) {
-      const dl = document.createElement("datalist");
-      dl.id = "klima-device-list";
-      deviceNames.forEach((name) => {
-        const opt = document.createElement("option");
-        opt.value = name;
-        dl.appendChild(opt);
-      });
-      document.body.appendChild(dl);
+    const devSel = document.createElement("select");
+    devSel.className = "sch-device";
+    deviceNames.forEach((name) => {
+      const o = document.createElement("option");
+      o.value = name;
+      o.textContent = name;
+      if (name === entry.deviceName) {
+        o.selected = true;
+      }
+      devSel.appendChild(o);
+    });
+    if (!deviceNames.includes(entry.deviceName) && entry.deviceName) {
+      const o = document.createElement("option");
+      o.value = entry.deviceName;
+      o.textContent = entry.deviceName;
+      o.selected = true;
+      devSel.appendChild(o);
     }
+    devSel.addEventListener("change", onChangeFn);
+    devTd.appendChild(devSel);
     tr.appendChild(devTd);
 
     tr.appendChild(wrap(createInput("text", entry.name, "sch-name", {}, onChangeFn)));
