@@ -38,7 +38,6 @@ const SWINGS = [
 ];
 
 const WEEKDAYS = ["mo", "tu", "we", "th", "fr", "sa", "su"];
-const WEEKDAY_LABELS = { mo: "Mo", tu: "Di", we: "Mi", th: "Do", fr: "Fr", sa: "Sa", su: "So" };
 
 function createSelect(options, value, cls, onChangeFn) {
   const sel = document.createElement("select");
