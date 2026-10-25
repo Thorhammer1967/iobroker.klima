@@ -139,7 +139,7 @@
 
 .schedule-table td {
   white-space: nowrap;
-  overflow: hidden;
+  overflow: visible;
   text-overflow: ellipsis;
 }
 
@@ -166,9 +166,9 @@
 
 .schedule-table th:nth-child(5),
 .schedule-table td:nth-child(5) {
-  width: 30px;
-  min-width: 30px;
-  max-width: 30px;
+  width: 70px;
+  min-width: 70px;
+  max-width: 70px;
 }
 
 .schedule-table th:nth-child(6),
@@ -222,11 +222,11 @@
 
 /* Wochentag-Checkboxen */
 .weekday-cell {
-  width: 22px;
-  min-width: 22px;
-  max-width: 22px;
+  width: 40px;
+  min-width: 40px;
+  max-width: 40px;
   text-align: center;
-  padding: 0;
+  padding: 0 4px;
 }
 
 .weekday-cell label {
@@ -248,31 +248,24 @@
 }
 
 .weekday-cell label span {
-  display: inline-block;
-  width: 14px;
-  height: 14px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 16px;
   border: 1px solid rgba(128, 128, 128, 0.4);
   border-radius: 3px;
   background: transparent;
-  position: relative;
-  transition: background 0.15s, border-color 0.15s;
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
 }
 
 .weekday-cell input[type="checkbox"]:checked + span {
-  background: rgba(128, 128, 128, 0.4);
-  border-color: rgba(128, 128, 128, 0.65);
-}
-
-.weekday-cell input[type="checkbox"]:checked + span::after {
-  content: "";
-  position: absolute;
-  left: 3px;
-  top: 0;
-  width: 4px;
-  height: 7px;
-  border: solid rgba(255, 255, 255, 0.85);
-  border-width: 0 2px 2px 0;
-  transform: rotate(45deg);
+  background: rgba(33, 150, 243, 0.55);
+  border-color: rgba(33, 150, 243, 0.8);
+  color: #fff;
 }
 
 /* Aktiv-Checkbox ("A") */
@@ -321,7 +314,6 @@
   transform: rotate(45deg);
 }
 
-/* Buttons */
 .btn-small {
   margin-top: 0.6rem;
   height: 28px;
@@ -329,6 +321,13 @@
   font-size: 0.75rem;
   padding: 0 12px;
   border-radius: 4px;
+  display: inline-block;
+}
+
+/* Zentrierte Aktions-Buttons unter Tabelle */
+.actions {
+  text-align: center;
+  margin-top: 0.6rem;
 }
 
 .btn-small i.material-icons {
@@ -370,6 +369,24 @@
 .filled-in {
   width: 16px;
   height: 16px;
+}
+
+@media (max-width: 600px) {
+  .schedule-table {
+    font-size: 0.7rem;
+  }
+  .schedule-table th,
+  .schedule-table td {
+    padding: 3px 2px;
+  }
+  .weekday-cell label {
+    width: 20px;
+    height: 20px;
+  }
+  .weekday-cell span {
+    width: 12px;
+    height: 12px;
+  }
 }
 
 /* Materialize overrides */

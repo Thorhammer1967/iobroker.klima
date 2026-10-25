@@ -17,9 +17,9 @@
     <script type="text/javascript" src="/lib/js/selectID.js"></script>
     <script type="text/javascript" src="/lib/js/materialize.js"></script>
     <script type="text/javascript" src="/js/adapter-settings.js"></script>
-    <link rel="stylesheet" type="text/css" href="style.css" />
-    <script type="text/javascript" src="words.js"></script>
-    <script type="text/javascript" src="settings.js"></script>
+    <link rel="stylesheet" type="text/css" href="style.css?v=5" />
+    <script type="text/javascript" src="words.js?v=2"></script>
+    <script type="text/javascript" src="settings.js?v=3"></script>
   </head>
   <body>
     <div class="m adapter-container" id="klima-settings">
@@ -43,7 +43,8 @@
         </div>
         <div class="row">
           <div class="col s12">
-            <h6 class="translate">Devices</h6>
+            <h6 class="translate version">Devices</h6>
+            <p class="grey-text text-lighten-2" style="font-size: 0.75rem; margin: -0.25rem 0 0.75rem;">Hier pflegst du Geräte ein, wie sie verbunden werden, und welche Grund-Einstellungen gelten.</p>
             <table class="compact-table" id="devices-table">
               <thead>
                 <tr>
@@ -57,10 +58,6 @@
                   <th class="translate">Local Key</th>
                   <th class="translate">Season</th>
                   <th class="translate">Version</th>
-                  <th class="translate">Ctrl</th>
-                  <th class="translate">Target</th>
-                  <th class="translate">Hyst</th>
-                  <th class="translate">Sensor</th>
                   <th></th>
                 </tr>
               </thead>
@@ -75,6 +72,7 @@
 
       <!-- Thermostat-Tab -->
       <div id="tab-thermostat" class="col s12 tab-content">
+        <p class="grey-text text-lighten-2" style="font-size: 0.75rem; margin: 0 0 0.75rem 0;">Hier stellst du ein, wann im Jahr kühlend/geheizt wird, und ob die automatische Regelung aktiv ist. Override: wenn aktiv, werden die untenstehenden Werte für die gewählte Zeit statt der automatischen Steuerung benutzt.</p>
         <div class="row section">
           <div class="col s12 m4 input-field">
             <input type="text" class="value" id="summerMonths" />
@@ -122,6 +120,7 @@
         <div class="row section">
           <div class="col s12">
             <h6 class="translate">Schedule entries</h6>
+            <p class="grey-text text-lighten-2" style="font-size: 0.75rem; margin: -0.25rem 0 0.75rem;">Hier stellst du Zeitfenster ein, wann bestimmte Werte gelten sollen. Wenn ein Zeitfenster aktiv ist, benutzt das System diese Werte statt der Standard-Einstellungen.</p>
             <div class="schedule-scroll">
               <table class="compact-table schedule-table" id="schedules-table">
                 <thead>
@@ -130,7 +129,7 @@
                     <th class="translate" style="min-width: 110px">Name</th>
                     <th class="translate" style="min-width: 120px">Temp. sensor</th>
                     <th class="translate" style="min-width: 120px">Presence</th>
-                    <th class="translate center" style="width: 40px">A</th>
+                    <th class="translate center" style="width: 70px">Aktiv</th>
                     <th class="translate center weekday-header">Mo</th>
                     <th class="translate center weekday-header">Di</th>
                     <th class="translate center weekday-header">Mi</th>
@@ -150,9 +149,11 @@
                 <tbody></tbody>
               </table>
             </div>
-            <a class="btn-small waves-effect waves-light" id="btn-add-schedule"
-              ><i class="material-icons left">add</i><span class="translate">Add</span></a
-            >
+            <div class="center-align">
+              <a class="btn-small waves-effect waves-light" id="btn-add-schedule"
+                ><i class="material-icons left">add</i><span class="translate">Add</span></a
+              >
+            </div>
           </div>
         </div>
       </div>

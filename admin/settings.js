@@ -38,6 +38,7 @@ const SWINGS = [
 ];
 
 const WEEKDAYS = ["mo", "tu", "we", "th", "fr", "sa", "su"];
+const WEEKDAY_LABELS = { mo: "Mo", tu: "Di", we: "Mi", th: "Do", fr: "Fr", sa: "Sa", su: "So" };
 
 function createSelect(options, value, cls, onChangeFn) {
   const sel = document.createElement("select");
@@ -222,10 +223,6 @@ function renderDevices() {
       ["td", createInput("password", dev.localKey ? gPasswordPlaceholder : "", "dev-localKey", {}, onChangeFn)],
       ["td", createSelect(SEASON_MODES, dev.seasonMode, "dev-season", onChangeFn)],
       ["td", createInput("text", dev.version, "dev-version", {}, onChangeFn)],
-      ["td", createCheckbox(dev.controlActive, "dev-ctrl", onChangeFn)],
-      ["td", createInput("number", dev.controlTarget, "dev-target", { min: 16, max: 31, step: 0.5 }, onChangeFn)],
-      ["td", createInput("number", dev.controlHysteresis, "dev-hyst", { min: 0, max: 5, step: 0.1 }, onChangeFn)],
-      ["td", createObjectIdInput(dev.controlSensor, "dev-sensor", onChangeFn)],
     ];
 
     fields.forEach(([, el]) => {
@@ -317,6 +314,8 @@ function renderSchedules() {
       cb.checked = !!entry[day];
       cb.addEventListener("change", onChangeFn);
       const span = document.createElement("span");
+      // Pflegbarkeit: Wochentag-Kürzel steht im Header, Checkbox als reine Box.
+      span.textContent = "";
       label.appendChild(cb);
       label.appendChild(span);
       td.appendChild(label);

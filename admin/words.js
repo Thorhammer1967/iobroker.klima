@@ -2,7 +2,7 @@
 
 systemDictionary = {
   Devices: { en: "Devices", de: "Geräte" },
-  Thermostat: { en: "Thermostat", de: "Thermostat" },
+  Thermostat: { en: "Control", de: "Regelung" },
   Schedules: { en: "Schedules", de: "Zeitpläne" },
   "Poll interval (s)": { en: "Poll interval (s)", de: "Abfrageintervall (s)" },
   Name: { en: "Name", de: "Name" },
