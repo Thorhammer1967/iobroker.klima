@@ -34,5 +34,15 @@
   "defaultOverrideMinutes": "Override-duur (min)",
   "defaultOverrideMode": "Override-modus",
   "defaultOverrideTarget": "Override doeltemperatuur",
-  "thermostatHint3": "Per-apparaatwaarden (regeling actief, doeltemp, hysterese, override, externe sensor) zijn beschikbaar in objecten klima.0.device_* en klima.0.thermostat.devices.*."
+  "thermostatHint3": "Per-apparaatwaarden (regeling actief, doeltemp, hysterese, override, externe sensor) zijn beschikbaar in objecten klima.0.device_* en klima.0.thermostat.devices.*.",
+  "scheduleName": "Naam",
+  "scheduleActive": "Actief",
+  "fanSpeed": "Ventilatorsnelheid",
+  "swing": "Zwenking",
+  "scheduleTemperatureSensor": "Temperatuursensor",
+  "schedulePresenceSensor": "Aanwezigheidssensor",
+  "seasonMode": "Seizoen modus",
+  "summerMonths": "Zomermaanden",
+  "deviceSeasonMode": "Seizoen modus",
+  "deviceSeasonModeHint": "Auto = per zomermaand, Zomer = alleen koelen, Winter = alleen verwarmen"
 }

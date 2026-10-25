@@ -11,10 +11,25 @@ for (const part of parts) {
   }
 }
 
-export default parts.map((part) => ({
-  ...part,
-  // lib/midea ist uebernommener Fremdcode (MIT, TA2k/ioBroker.midea).
-  // Er wird 1:1 weitergegeben und bewusst nicht umformatiert, damit der
-  // Vergleich mit dem Original erhalten bleibt.
-  ignores: [...(part.ignores || []), "lib/midea/**"],
-}));
+export default [
+  ...parts.map((part) => ({
+    ...part,
+    // lib/midea ist uebernommener Fremdcode (MIT, TA2k/ioBroker.midea).
+    // Er wird 1:1 weitergegeben und bewusst nicht umformatiert, damit der
+    // Vergleich mit dem Original erhalten bleibt.
+    ignores: [...(part.ignores || []), "lib/midea/**"],
+  })),
+  {
+    files: ["admin/*.js"],
+    languageOptions: {
+      globals: {
+        onChange: "readonly",
+        document: "readonly",
+        gOnChange: "readonly",
+        systemDictionary: "writable",
+        showSelectIdDialog: "readonly",
+        window: "readonly",
+      },
+    },
+  },
+];

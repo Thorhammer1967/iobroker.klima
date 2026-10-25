@@ -1,7 +1,7 @@
 {
   "common": {
     "name": "klima",
-    "version": "0.2.0",
+    "version": "0.2.3",
     "titleLang": {
       "en": "Klima",
       "de": "Klima",
@@ -52,7 +52,7 @@
     "connectionType": "local",
     "dataSource": "poll",
     "adminUI": {
-      "config": "json"
+      "config": "materialize"
     },
     "dependencies": [
       {
@@ -65,6 +65,18 @@
       }
     ],
     "news": {
+      "0.2.3": {
+        "en": "Schedule table now has a single device dropdown populated from the device table; multiple schedule rows per device are supported.",
+        "de": "Zeitplan-Tabelle hat jetzt ein einzelnes Geräte-Dropdown aus der Gerätetabelle; mehrere Zeitplan-Zeilen pro Gerät werden unterstützt."
+      },
+      "0.2.2": {
+        "en": "Schedules are now matched by device name instead of device ID; each device table supports multiple time windows.",
+        "de": "Zeitpläne werden jetzt über den Gerätenamen zugeordnet, nicht mehr über die ID; pro Gerät-Tabelle sind mehrere Zeitfenster möglich."
+      },
+      "0.2.1": {
+        "en": "Schedule tab now shows one sub-tab per device with its own weekly/day schedule table.",
+        "de": "Zeitplaene-Reiter zeigt jetzt pro Gerät einen eigenen Unter-Reiter mit eigener Wochen-/Tages-Zeitplan-Tabelle."
+      },
       "0.2.0": {
         "en": "Added dedicated schedules tab: per-device weekly/day time plans with mode, target temp, fan and swing.",
         "de": "Neuer Zeitplaene-Reiter: pro Geraet wochen-/tagesbasierte Zeitfenster mit Modus, Solltemperatur, Luefter und Swing."
@@ -98,6 +110,9 @@
     "readme": "https://github.com/Thorhammer1967/iobroker.klima/blob/main/README.md",
     "tier": 2,
     "supportCustoms": false,
+    "supportedMessages": {
+      "custom": true
+    },
     "messagebox": true
   },
   "native": {

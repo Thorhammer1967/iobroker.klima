@@ -1,0 +1,396 @@
+/* Kompaktes, sauberes Admin-Layout */
+
+.adapter-container {
+  padding: 0.75rem 1rem;
+}
+
+.adapter-container h6 {
+  margin: 0.75rem 0 0.5rem;
+  font-size: 0.95rem;
+  font-weight: 500;
+  opacity: 0.9;
+}
+
+.tabs {
+  margin-bottom: 0.75rem;
+}
+
+.tab-content {
+  padding-top: 0.25rem;
+}
+
+/* Basis-Tabelle */
+.compact-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.78rem;
+  line-height: 1.3;
+}
+
+.compact-table th,
+.compact-table td {
+  padding: 4px 5px;
+  vertical-align: middle;
+  border-bottom: 1px solid rgba(128, 128, 128, 0.18);
+}
+
+.compact-table th {
+  font-weight: 600;
+  font-size: 0.72rem;
+  text-align: left;
+  color: inherit;
+  opacity: 0.8;
+  background: rgba(128, 128, 128, 0.1);
+  position: sticky;
+  top: 0;
+  white-space: nowrap;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.compact-table tbody tr:nth-child(even) {
+  background: rgba(128, 128, 128, 0.04);
+}
+
+.compact-table tbody tr:hover {
+  background: rgba(128, 128, 128, 0.08);
+}
+
+.compact-table input,
+.compact-table select {
+  margin: 0;
+  height: 1.65rem;
+  line-height: 1.65rem;
+  font-size: 0.78rem;
+  padding: 0 4px;
+  border: 1px solid rgba(128, 128, 128, 0.25);
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.04);
+  color: inherit;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.compact-table input[type="number"] {
+  text-align: right;
+}
+
+.compact-table select {
+  padding-right: 14px;
+  cursor: pointer;
+}
+
+.compact-table td.center,
+.compact-table th.center {
+  text-align: center;
+}
+
+/* Object-ID Felder */
+.object-id-wrap {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  min-width: 0;
+}
+
+.object-id-wrap input {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  padding-right: 4px;
+  font-size: 0.72rem;
+  cursor: pointer;
+}
+
+.object-id-btn {
+  flex: 0 0 auto;
+  padding: 0 4px;
+  height: 1.65rem;
+  line-height: 1.65rem;
+  min-width: 1.65rem;
+  text-align: center;
+  border-radius: 3px;
+}
+
+.object-id-btn i.material-icons {
+  font-size: 0.9rem;
+  line-height: 1.65rem;
+}
+
+/* Zeitplantabelle */
+.schedule-scroll {
+  overflow-x: auto;
+  max-width: 100%;
+  border: 1px solid rgba(128, 128, 128, 0.12);
+  border-radius: 4px;
+  padding: 2px;
+}
+
+.schedule-table {
+  table-layout: fixed;
+  min-width: 820px;
+}
+
+.schedule-table th,
+.schedule-table td {
+  padding: 4px 3px;
+}
+
+.schedule-table td {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Spaltenbreiten Zeitplan */
+.schedule-table th:nth-child(1),
+.schedule-table td:nth-child(1) {
+  width: 100px;
+  min-width: 100px;
+}
+
+.schedule-table th:nth-child(2),
+.schedule-table td:nth-child(2) {
+  width: 90px;
+  min-width: 90px;
+}
+
+.schedule-table th:nth-child(3),
+.schedule-table td:nth-child(3),
+.schedule-table th:nth-child(4),
+.schedule-table td:nth-child(4) {
+  width: 110px;
+  min-width: 110px;
+}
+
+.schedule-table th:nth-child(5),
+.schedule-table td:nth-child(5) {
+  width: 30px;
+  min-width: 30px;
+  max-width: 30px;
+}
+
+.schedule-table th:nth-child(6),
+.schedule-table td:nth-child(6),
+.schedule-table th:nth-child(7),
+.schedule-table td:nth-child(7),
+.schedule-table th:nth-child(8),
+.schedule-table td:nth-child(8),
+.schedule-table th:nth-child(9),
+.schedule-table td:nth-child(9),
+.schedule-table th:nth-child(10),
+.schedule-table td:nth-child(10),
+.schedule-table th:nth-child(11),
+.schedule-table td:nth-child(11),
+.schedule-table th:nth-child(12),
+.schedule-table td:nth-child(12) {
+  width: 22px;
+  min-width: 22px;
+  max-width: 22px;
+}
+
+.schedule-table th:nth-child(13),
+.schedule-table td:nth-child(13),
+.schedule-table th:nth-child(14),
+.schedule-table td:nth-child(14) {
+  width: 52px;
+  min-width: 52px;
+}
+
+.schedule-table th:nth-child(15),
+.schedule-table td:nth-child(15),
+.schedule-table th:nth-child(17),
+.schedule-table td:nth-child(17),
+.schedule-table th:nth-child(18),
+.schedule-table td:nth-child(18) {
+  width: 70px;
+  min-width: 70px;
+}
+
+.schedule-table th:nth-child(16),
+.schedule-table td:nth-child(16) {
+  width: 46px;
+  min-width: 46px;
+}
+
+.schedule-table th:nth-child(19),
+.schedule-table td:nth-child(19) {
+  width: 34px;
+  min-width: 34px;
+}
+
+/* Wochentag-Checkboxen */
+.weekday-cell {
+  width: 22px;
+  min-width: 22px;
+  max-width: 22px;
+  text-align: center;
+  padding: 0;
+}
+
+.weekday-cell label {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+  cursor: pointer;
+  width: 22px;
+  height: 22px;
+  position: relative;
+}
+
+.weekday-cell input[type="checkbox"] {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.weekday-cell label span {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border: 1px solid rgba(128, 128, 128, 0.4);
+  border-radius: 3px;
+  background: transparent;
+  position: relative;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.weekday-cell input[type="checkbox"]:checked + span {
+  background: rgba(128, 128, 128, 0.4);
+  border-color: rgba(128, 128, 128, 0.65);
+}
+
+.weekday-cell input[type="checkbox"]:checked + span::after {
+  content: "";
+  position: absolute;
+  left: 3px;
+  top: 0;
+  width: 4px;
+  height: 7px;
+  border: solid rgba(255, 255, 255, 0.85);
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+
+/* Aktiv-Checkbox ("A") */
+.schedule-table td:nth-child(5) label {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+  cursor: pointer;
+  width: 24px;
+  height: 24px;
+  position: relative;
+}
+
+.schedule-table td:nth-child(5) input[type="checkbox"] {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.schedule-table td:nth-child(5) label span {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border: 1px solid rgba(128, 128, 128, 0.4);
+  border-radius: 3px;
+  background: transparent;
+  position: relative;
+}
+
+.schedule-table td:nth-child(5) input[type="checkbox"]:checked + span {
+  background: rgba(128, 128, 128, 0.4);
+  border-color: rgba(128, 128, 128, 0.65);
+}
+
+.schedule-table td:nth-child(5) input[type="checkbox"]:checked + span::after {
+  content: "";
+  position: absolute;
+  left: 4px;
+  top: 0;
+  width: 4px;
+  height: 9px;
+  border: solid rgba(255, 255, 255, 0.85);
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+
+/* Buttons */
+.btn-small {
+  margin-top: 0.6rem;
+  height: 28px;
+  line-height: 28px;
+  font-size: 0.75rem;
+  padding: 0 12px;
+  border-radius: 4px;
+}
+
+.btn-small i.material-icons {
+  font-size: 0.95rem;
+  line-height: 28px;
+}
+
+.btn-icon {
+  padding: 0 4px;
+  height: 1.65rem;
+  line-height: 1.65rem;
+  min-width: 1.65rem;
+  text-align: center;
+  font-size: 0.75rem;
+  border-radius: 3px;
+}
+
+.btn-icon i.material-icons {
+  font-size: 0.9rem;
+  line-height: 1.65rem;
+}
+
+/* Eingabefelder */
+.input-field {
+  margin-top: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.input-field input,
+.input-field select {
+  font-size: 0.85rem;
+}
+
+.filled-in + span {
+  font-size: 0.85rem;
+  padding-left: 28px;
+}
+
+.filled-in {
+  width: 16px;
+  height: 16px;
+}
+
+/* Materialize overrides */
+.tabs .tab a {
+  font-size: 0.85rem;
+  padding: 0 12px;
+}
+
+.row.section {
+  margin-bottom: 0.5rem;
+}
+
+/* selectID Dialog in Materialize-Look */
+#dialog-select-member {
+  z-index: 2000 !important;
+}
+
+.ui-dialog {
+  z-index: 2001 !important;
+}
+
+.ui-widget-overlay {
+  z-index: 1999 !important;
+}

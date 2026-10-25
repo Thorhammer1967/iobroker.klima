@@ -34,5 +34,15 @@
   "defaultOverrideMinutes": "Длительность Override (мин)",
   "defaultOverrideMode": "Режим Override",
   "defaultOverrideTarget": "Целевая температура Override",
-  "thermostatHint3": "Значения для каждого устройства (регулирование активно, целевая темп., гистерезис, Override, внешний датчик) находятся в объектах klima.0.device_* и klima.0.thermostat.devices.*."
+  "thermostatHint3": "Значения для каждого устройства (регулирование активно, целевая темп., гистерезис, Override, внешний датчик) находятся в объектах klima.0.device_* и klima.0.thermostat.devices.*.",
+  "scheduleName": "Имя",
+  "scheduleActive": "Активно",
+  "fanSpeed": "Скорость вентилятора",
+  "swing": "Качание",
+  "scheduleTemperatureSensor": "Датчик температуры",
+  "schedulePresenceSensor": "Датчик присутствия",
+  "seasonMode": "Режим сезона",
+  "summerMonths": "Летние месяцы",
+  "deviceSeasonMode": "Режим сезона",
+  "deviceSeasonModeHint": "Авто = по летним месяцам, Лето = только охлаждение, Зима = только обогрев"
 }

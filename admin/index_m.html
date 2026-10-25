@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Klima Adapter Settings</title>
+    <link rel="stylesheet" type="text/css" href="/css/adapter.css" />
+    <link rel="stylesheet" type="text/css" href="/lib/css/materialize.css" />
+    <link rel="stylesheet" type="text/css" href="/lib/css/themes/jquery-ui/default/jquery-ui.min.css" />
+    <link rel="stylesheet" type="text/css" href="/lib/css/fancytree/ui.fancytree.min.css" />
+    <link rel="stylesheet" type="text/css" href="/lib/css/iob/selectID.css" />
+    <script type="text/javascript" src="/lib/js/jquery-3.2.1.min.js"></script>
+    <script type="text/javascript" src="/socket.io/socket.io.js"></script>
+    <script type="text/javascript" src="/js/translate.js"></script>
+    <script type="text/javascript" src="/lib/js/jquery-ui-1.10.3.full.min.js"></script>
+    <script type="text/javascript" src="/lib/js/jquery.fancytree-all.min.js"></script>
+    <script type="text/javascript" src="/lib/js/selectID.js"></script>
+    <script type="text/javascript" src="/lib/js/materialize.js"></script>
+    <script type="text/javascript" src="/js/adapter-settings.js"></script>
+    <link rel="stylesheet" type="text/css" href="style.css" />
+    <script type="text/javascript" src="words.js"></script>
+    <script type="text/javascript" src="settings.js"></script>
+  </head>
+  <body>
+    <div class="m adapter-container" id="klima-settings">
+      <div class="row">
+        <div class="col s12">
+          <ul class="tabs">
+            <li class="tab col s3"><a href="#tab-devices" class="translate active">Devices</a></li>
+            <li class="tab col s3"><a href="#tab-thermostat" class="translate">Thermostat</a></li>
+            <li class="tab col s3"><a href="#tab-schedules" class="translate">Schedules</a></li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Geräte-Tab -->
+      <div id="tab-devices" class="col s12 tab-content">
+        <div class="row section">
+          <div class="col s12 m4 input-field">
+            <input type="number" class="value" id="pollInterval" min="5" max="3600" />
+            <label for="pollInterval" class="translate">Poll interval (s)</label>
+          </div>
+        </div>
+        <div class="row">
+          <div class="col s12">
+            <h6 class="translate">Devices</h6>
+            <table class="compact-table" id="devices-table">
+              <thead>
+                <tr>
+                  <th class="translate">Name</th>
+                  <th class="translate">Type</th>
+                  <th class="translate">ID</th>
+                  <th class="translate">Host</th>
+                  <th class="translate">Port</th>
+                  <th class="translate">Token</th>
+                  <th class="translate">Key</th>
+                  <th class="translate">Local Key</th>
+                  <th class="translate">Season</th>
+                  <th class="translate">Version</th>
+                  <th class="translate">Ctrl</th>
+                  <th class="translate">Target</th>
+                  <th class="translate">Hyst</th>
+                  <th class="translate">Sensor</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+            <a class="btn-small waves-effect waves-light" id="btn-add-device"
+              ><i class="material-icons left">add</i><span class="translate">Add</span></a
+            >
+          </div>
+        </div>
+      </div>
+
+      <!-- Thermostat-Tab -->
+      <div id="tab-thermostat" class="col s12 tab-content">
+        <div class="row section">
+          <div class="col s12 m4 input-field">
+            <input type="text" class="value" id="summerMonths" />
+            <label for="summerMonths" class="translate">Summer months</label>
+          </div>
+        </div>
+        <div class="row">
+          <div class="col s12 m4">
+            <label>
+              <input type="checkbox" class="value filled-in" id="globalThermostatActive" />
+              <span class="translate">Global thermostat active</span>
+            </label>
+          </div>
+          <div class="col s12 m4">
+            <label>
+              <input type="checkbox" class="value filled-in" id="globalOverrideActive" />
+              <span class="translate">Global override active</span>
+            </label>
+          </div>
+        </div>
+        <div class="row">
+          <div class="col s12 m3 input-field">
+            <input type="number" class="value" id="defaultOverrideMinutes" min="1" max="1440" />
+            <label for="defaultOverrideMinutes" class="translate">Override minutes</label>
+          </div>
+          <div class="col s12 m3 input-field">
+            <select class="value" id="defaultOverrideMode">
+              <option value="auto">Auto</option>
+              <option value="cool">Cool</option>
+              <option value="heat">Heat</option>
+              <option value="dry">Dry</option>
+              <option value="fan">Fan</option>
+            </select>
+            <label for="defaultOverrideMode" class="translate">Override mode</label>
+          </div>
+          <div class="col s12 m3 input-field">
+            <input type="number" class="value" id="defaultOverrideTarget" min="16" max="31" step="0.5" />
+            <label for="defaultOverrideTarget" class="translate">Override target</label>
+          </div>
+        </div>
+      </div>
+
+      <!-- Zeitplan-Tab -->
+      <div id="tab-schedules" class="col s12 tab-content">
+        <div class="row section">
+          <div class="col s12">
+            <h6 class="translate">Schedule entries</h6>
+            <div class="schedule-scroll">
+              <table class="compact-table schedule-table" id="schedules-table">
+                <thead>
+                  <tr>
+                    <th class="translate" style="min-width: 120px">Device</th>
+                    <th class="translate" style="min-width: 110px">Name</th>
+                    <th class="translate" style="min-width: 120px">Temp. sensor</th>
+                    <th class="translate" style="min-width: 120px">Presence</th>
+                    <th class="translate center" style="width: 40px">A</th>
+                    <th class="translate center weekday-header">Mo</th>
+                    <th class="translate center weekday-header">Di</th>
+                    <th class="translate center weekday-header">Mi</th>
+                    <th class="translate center weekday-header">Do</th>
+                    <th class="translate center weekday-header">Fr</th>
+                    <th class="translate center weekday-header">Sa</th>
+                    <th class="translate center weekday-header">So</th>
+                    <th class="translate center" style="width: 70px">Start</th>
+                    <th class="translate center" style="width: 70px">End</th>
+                    <th class="translate" style="width: 70px">Mode</th>
+                    <th class="translate center" style="width: 55px">Soll</th>
+                    <th class="translate" style="width: 70px">Fan</th>
+                    <th class="translate" style="width: 70px">Swing</th>
+                    <th style="width: 50px"></th>
+                  </tr>
+                </thead>
+                <tbody></tbody>
+              </table>
+            </div>
+            <a class="btn-small waves-effect waves-light" id="btn-add-schedule"
+              ><i class="material-icons left">add</i><span class="translate">Add</span></a
+            >
+          </div>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

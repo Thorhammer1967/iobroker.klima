@@ -34,5 +34,15 @@
   "defaultOverrideMinutes": "Czas nadpisania (min)",
   "defaultOverrideMode": "Tryb nadpisania",
   "defaultOverrideTarget": "Nadpisana temperatura docelowa",
-  "thermostatHint3": "Wartości dla poszczególnych urządzeń (regulacja aktywna, temp. docelowa, histereza, override, czujnik zewnętrzny) znajdują się w obiektach klima.0.device_* oraz klima.0.thermostat.devices.*."
+  "thermostatHint3": "Wartości dla poszczególnych urządzeń (regulacja aktywna, temp. docelowa, histereza, override, czujnik zewnętrzny) znajdują się w obiektach klima.0.device_* oraz klima.0.thermostat.devices.*.",
+  "scheduleName": "Nazwa",
+  "scheduleActive": "Aktywny",
+  "fanSpeed": "Prędkość wentylatora",
+  "swing": "Wentylacja",
+  "scheduleTemperatureSensor": "Czujnik temperatury",
+  "schedulePresenceSensor": "Czujnik obecności",
+  "seasonMode": "Tryb sezonowy",
+  "summerMonths": "Miesiące letnie",
+  "deviceSeasonMode": "Tryb sezonowy",
+  "deviceSeasonModeHint": "Auto = według miesięcy letnich, Lato = tylko chłodzenie, Zima = tylko ogrzewanie"
 }

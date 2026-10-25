@@ -16,11 +16,55 @@ class KlimaAdapter extends utils.Adapter {
     this.on("ready", this.onReady.bind(this));
     this.on("unload", this._onUnload.bind(this));
     this.on("objectChange", this._onObjectChange.bind(this));
+    this.on("message", this.onMessage.bind(this));
     this.devices = new Map();
     this._pollTimer = null;
     this._overrideTimers = new Map();
     this._lastOverrideState = new Map();
     this._scheduleState = new Map();
+    this._runtimeSeasonModes = new Map();
+  }
+
+  /**
+   * Ermittelt den effektiven Saison-Modus fuer ein Geraet.
+   * "auto" wird anhand der globalen Sommer-Monate aufgeloest.
+   * @param {string} devId
+   * @returns {"summer" | "winter"}
+   */
+  _resolveSeasonMode(devId) {
+    const cfg = this.config || {};
+    const devices = Array.isArray(cfg.devices) ? cfg.devices : [];
+    const deviceConfig = devices.find((d) => d && d.id === devId);
+    const runtimeMode = this._runtimeSeasonModes && this._runtimeSeasonModes.get(devId);
+    const mode = runtimeMode || (deviceConfig && deviceConfig.seasonMode) || "auto";
+    if (mode === "summer" || mode === "winter") {
+      return mode;
+    }
+    const month = new Date().getMonth() + 1;
+    const raw = String(cfg.summerMonths || "5,6,7,8,9");
+    const months = raw
+      .split(",")
+      .map((s) => parseInt(s.trim(), 10))
+      .filter((n) => !Number.isNaN(n) && n >= 1 && n <= 12);
+    return months.includes(month) ? "summer" : "winter";
+  }
+
+  /**
+   * Passt einen Modus-Befehl an den Saison-Modus eines Geraets an.
+   * Sommer verbietet "heat", Winter verbietet "cool" / "dry".
+   * @param {string} devId
+   * @param {string} mode
+   * @returns {string | undefined}
+   */
+  _clampModeToSeason(devId, mode) {
+    const season = this._resolveSeasonMode(devId);
+    if (season === "summer" && mode === "heat") {
+      return undefined;
+    }
+    if (season === "winter" && (mode === "cool" || mode === "dry")) {
+      return undefined;
+    }
+    return mode;
   }
 
   async onReady() {
@@ -84,6 +128,10 @@ class KlimaAdapter extends utils.Adapter {
     }
 
     this.log.info(`${this.devices.size} Klimageraet(e) konfiguriert - Abfrageintervall ${pollInterval / 1000}s`);
+    for (const [devId] of this.devices.entries()) {
+      const season = this._resolveSeasonMode(devId);
+      this.log.info(`Saison-Modus ${devId}: ${season === "summer" ? "Sommer" : "Winter"}`);
+    }
 
     // Voreinstellungen aus der Geraetetabelle auf die Regelungs-States
     // uebertragen, damit man im Admin-UI direkt Sollwerte setzen kann.
@@ -105,6 +153,8 @@ class KlimaAdapter extends utils.Adapter {
     this._scheduleTimer = this.setInterval(() => {
       this._runScheduleEngine().catch((e) => this.log.error(`Zeitplan-Engine fehlgeschlagen: ${e.message}`));
     }, 60_000);
+
+    this._startSeasonWatchdog();
 
     // v7: ohne explizites Abonnement feuert das stateChange-Event nicht.
     // "device_*" matcht alle Geraete-Objekte, der Namespace wird
@@ -257,6 +307,8 @@ class KlimaAdapter extends utils.Adapter {
    *   thermostat.devices.<id>.active     (pro Geraet)
    *   thermostat.devices.<id>.target     (pro Geraet)
    *   thermostat.devices.<id>.hysteresis (pro Geraet)
+   *   thermostat.devices.<id>.seasonMode      (auto/summer/winter)
+   *   thermostat.devices.<id>.seasonModeEffective (summer/winter, Read-Only)
    *   thermostat.devices.<id>.override       (manueller Override)
    *   thermostat.devices.<id>.overrideMode  (Zielmodus)
    *   thermostat.devices.<id>.overrideTarget (Zieltemperatur)
@@ -327,6 +379,30 @@ class KlimaAdapter extends utils.Adapter {
           max: 5,
           step: 0.1,
           def: CONTROL_DEFAULTS.hysteresis,
+        },
+      });
+      await this.extendObject(`${base}.seasonMode`, {
+        type: "state",
+        common: {
+          name: "Season mode",
+          type: "string",
+          role: "state",
+          read: true,
+          write: true,
+          states: { auto: "Auto", summer: "Summer", winter: "Winter" },
+          def: "auto",
+        },
+      });
+      await this.extendObject(`${base}.seasonModeEffective`, {
+        type: "state",
+        common: {
+          name: "Effective season mode",
+          type: "string",
+          role: "state",
+          read: true,
+          write: false,
+          states: { summer: "Summer", winter: "Winter" },
+          def: "winter",
         },
       });
       await this.extendObject(`${base}.override`, {
@@ -435,6 +511,10 @@ class KlimaAdapter extends utils.Adapter {
       const remaining = await this.getStateAsync(`${thermoId}.overrideRemaining`);
       await this.setState(`${thermoId}.overrideRemaining`, remaining?.val ?? 0, true);
 
+      const devSeason = String(dev.seasonMode || "auto");
+      await this.setState(`${thermoId}.seasonMode`, devSeason, true);
+      await this.setState(`${thermoId}.seasonModeEffective`, this._resolveSeasonMode(dev.id), true);
+
       if (devOverride) {
         await this._startOverride(instance);
       }
@@ -459,7 +539,7 @@ class KlimaAdapter extends utils.Adapter {
    * Prueft, ob ein Zeitplan-Eintrag fuer das aktuelle Datum/Zeit aktiv ist.
    */
   _isScheduleActive(entry) {
-    if (!entry || entry.active !== true || !entry.deviceId) {
+    if (!entry || entry.active !== true) {
       return false;
     }
     const weekdays = ["su", "mo", "tu", "we", "th", "fr", "sa"];
@@ -473,6 +553,10 @@ class KlimaAdapter extends utils.Adapter {
     const end = this._timeToMinutes(entry.end);
     if (start === null || end === null) {
       return false;
+    }
+    // Zeitplan ueber Mitternacht: end liegt vor start.
+    if (end < start) {
+      return currentMinutes >= start || currentMinutes < end;
     }
     return currentMinutes >= start && currentMinutes < end;
   }
@@ -494,22 +578,58 @@ class KlimaAdapter extends utils.Adapter {
   }
 
   /**
+   * Liest den Wert eines konfigurierten Fremd-Sensors.
+   * @param {string} sensorId
+   * @returns {Promise<any>}
+   */
+  async _readSensorValue(sensorId) {
+    if (!sensorId) {
+      return undefined;
+    }
+    try {
+      const state = await this.getForeignStateAsync(sensorId);
+      return state && state.val !== null && state.val !== undefined ? state.val : undefined;
+    } catch (e) {
+      this.log.debug(`Sensor ${sensorId} konnte nicht gelesen werden: ${e.message}`);
+      return undefined;
+    }
+  }
+
+  /**
    * Ermittelt das aktive Zeitplan-Kommando fuer ein Geraet. Rueckgabe ist
    * ein cmd-Objekt oder null, wenn kein Zeitplan aktiv ist.
+   * Beruecksichtigt optionale Temperatur- und Praesenz-Sensoren.
    */
-  _getScheduleCommand(devId) {
+  async _getScheduleCommand(devId) {
     const cfg = this.config || {};
+    const devices = Array.isArray(cfg.devices) ? cfg.devices : [];
+    const deviceConfig = devices.find((d) => d && d.id === devId);
+    const devName = deviceConfig && deviceConfig.name ? deviceConfig.name : devId;
     const schedules = Array.isArray(cfg.schedules) ? cfg.schedules : [];
     const activeEntries = schedules
-      .filter((entry) => entry.deviceId === devId && this._isScheduleActive(entry))
+      .filter(
+        (entry) => entry && entry.active === true && entry.deviceName === devName && this._isScheduleActive(entry),
+      )
       .sort((a, b) => this._timeToMinutes(a.start) - this._timeToMinutes(b.start));
     if (!activeEntries.length) {
       return null;
     }
     const entry = activeEntries[0];
+
+    // Praesenz-Sensor: bei Abwesenheit Zeitplan deaktivieren.
+    const presenceId = entry.presenceSensor ? String(entry.presenceSensor).trim() : "";
+    if (presenceId) {
+      const presence = await this._readSensorValue(presenceId);
+      if (!presence || presence === "false" || presence === false || presence === 0 || presence === "0") {
+        this.log.debug(`${devId}: Zeitplan pausiert - keine Praesenz (${presenceId})`);
+        return null;
+      }
+    }
+
     const cmd = { power: true };
-    if (MODES.includes(entry.mode)) {
-      cmd.mode = entry.mode;
+    const mode = this._clampModeToSeason(devId, entry.mode);
+    if (mode && MODES.includes(mode)) {
+      cmd.mode = mode;
     }
     if (typeof entry.target === "number" && !Number.isNaN(entry.target)) {
       cmd.targetTemperature = entry.target;
@@ -520,6 +640,43 @@ class KlimaAdapter extends utils.Adapter {
     if (SWINGS.includes(entry.swing)) {
       cmd.swing = entry.swing;
     }
+
+    // Temperatur-Sensor: Zieltemperatur nur anfahren, wenn noetig.
+    const tempId = entry.temperatureSensor ? String(entry.temperatureSensor).trim() : "";
+    if (tempId) {
+      const current = await this._readSensorValue(tempId);
+      if (typeof current !== "number" || Number.isNaN(current)) {
+        this.log.warn(`${devId}: Zeitplan-Temperatursensor ${tempId} liefert keinen gueltigen Wert`);
+        return cmd;
+      }
+      const hysteresisState = await this.getStateAsync(`device_${devId}.controlHysteresis`);
+      const hysteresis = typeof hysteresisState?.val === "number" ? hysteresisState.val : CONTROL_DEFAULTS.hysteresis;
+      const diff = current - entry.target;
+      if (diff >= hysteresis) {
+        const seasonMode = this._clampModeToSeason(devId, "cool");
+        if (seasonMode) {
+          cmd.mode = seasonMode;
+          cmd.power = true;
+          this.log.debug(`${devId}: Zeitplan kuelt (Ist=${current}°C, Soll=${entry.target}°C)`);
+        } else {
+          cmd.power = false;
+        }
+      } else if (diff <= -hysteresis) {
+        const seasonMode = this._clampModeToSeason(devId, "heat");
+        if (seasonMode) {
+          cmd.mode = seasonMode;
+          cmd.power = true;
+          this.log.debug(`${devId}: Zeitplan heizt (Ist=${current}°C, Soll=${entry.target}°C)`);
+        } else {
+          cmd.power = false;
+        }
+      } else {
+        // Im Toleranzbereich - Geraet ausschalten.
+        cmd.power = false;
+        this.log.debug(`${devId}: Zeitplan im Toleranzbereich (Ist=${current}°C, Soll=${entry.target}°C)`);
+      }
+    }
+
     return cmd;
   }
 
@@ -532,7 +689,7 @@ class KlimaAdapter extends utils.Adapter {
   async _runScheduleEngine() {
     for (const [devId, dev] of this.devices.entries()) {
       try {
-        const cmd = this._getScheduleCommand(devId);
+        const cmd = await this._getScheduleCommand(devId);
         const last = this._scheduleState.get(devId) || null;
         if (cmd) {
           // Zeitplan aktiv: Werte nur einmal oder bei Aenderung schreiben.
@@ -581,6 +738,9 @@ class KlimaAdapter extends utils.Adapter {
         dev[key] = this._decryptIfNeeded(dev[key], secret);
       }
     }
+    // Config aendert sich → Runtime-Override fuer Saison zuruecksetzen.
+    this._runtimeSeasonModes = new Map();
+    this._startSeasonWatchdog();
     await this._syncConfigToStates(list);
   }
 
@@ -627,6 +787,10 @@ class KlimaAdapter extends utils.Adapter {
       await this.setState(`${thermoId}.overrideTarget`, overrideTarget, true);
       await this.setState(`${thermoId}.overrideMinutes`, overrideMinutes, true);
 
+      const devSeason = String(dev.seasonMode || "auto");
+      await this.setState(`${thermoId}.seasonMode`, devSeason, true);
+      await this.setState(`${thermoId}.seasonModeEffective`, this._resolveSeasonMode(dev.id), true);
+
       if (overrideActive) {
         await this._startOverride(instance);
       } else {
@@ -638,6 +802,7 @@ class KlimaAdapter extends utils.Adapter {
       }
     }
     await this.setState("thermostat.globalActive", anyActive.length > 0, true);
+
     // Konfigurationsaenderung kann Zeitplaene aktivieren/deaktivieren.
     await this._runScheduleEngine();
   }
@@ -711,7 +876,7 @@ class KlimaAdapter extends utils.Adapter {
       }
 
       // Aktiver Zeitplan hat Vorrang vor der Hysterese-Regelung.
-      const scheduleCmd = this._getScheduleCommand(dev.id);
+      const scheduleCmd = await this._getScheduleCommand(dev.id);
       if (scheduleCmd) {
         await this.setState(`${id}.controlState`, "schedule", true);
         return;
@@ -757,17 +922,27 @@ class KlimaAdapter extends utils.Adapter {
       let controlState = "idle";
 
       if (diff >= hysteresis) {
-        // Zu warm → kühlen
-        controlState = "cooling";
-        newPower = true;
-        newMode = mode === "heat" ? "cool" : mode || "cool";
-        newTargetTemp = target;
+        // Zu warm → kühlen (im Winter nicht erlaubt)
+        const allowedMode = this._clampModeToSeason(dev.id, "cool");
+        if (!allowedMode) {
+          controlState = isOn ? "idle" : "off";
+        } else {
+          controlState = "cooling";
+          newPower = true;
+          newMode = mode === "heat" ? "cool" : mode || "cool";
+          newTargetTemp = target;
+        }
       } else if (diff <= -hysteresis) {
-        // Zu kalt → heizen
-        controlState = "heating";
-        newPower = true;
-        newMode = mode === "cool" || mode === "dry" ? "heat" : mode || "heat";
-        newTargetTemp = target;
+        // Zu kalt → heizen (im Sommer nicht erlaubt)
+        const allowedMode = this._clampModeToSeason(dev.id, "heat");
+        if (!allowedMode) {
+          controlState = isOn ? "idle" : "off";
+        } else {
+          controlState = "heating";
+          newPower = true;
+          newMode = mode === "cool" || mode === "dry" ? "heat" : mode || "heat";
+          newTargetTemp = target;
+        }
       } else {
         // Im Toleranzbereich → laufen lassen oder standby
         controlState = isOn ? "idle" : "off";
@@ -778,7 +953,10 @@ class KlimaAdapter extends utils.Adapter {
         cmd.power = newPower;
       }
       if (newMode !== mode && newPower) {
-        cmd.mode = newMode;
+        const seasonMode = this._clampModeToSeason(dev.id, newMode);
+        if (seasonMode) {
+          cmd.mode = seasonMode;
+        }
       }
       if (newTargetTemp !== targetTempState?.val && newPower) {
         cmd.targetTemperature = newTargetTemp;
@@ -881,13 +1059,73 @@ class KlimaAdapter extends utils.Adapter {
   }
 
   /**
+   * Setzt den Runtime-Saison-Modus fuer ein einzelnes Geraet (z. B. aus
+   * VIS/Scripten) und aktualisiert die zugehoerigen States.
+   */
+  async _setRuntimeSeasonMode(devId, value) {
+    const valid = ["auto", "summer", "winter"];
+    if (!valid.includes(value)) {
+      this.log.warn(`Ungueltiger Saison-Modus: ${value} - erlaubt sind ${valid.join(", ")}`);
+      return;
+    }
+    if (!this._runtimeSeasonModes) {
+      this._runtimeSeasonModes = new Map();
+    }
+    this._runtimeSeasonModes.set(devId, value);
+    await this.setState(`thermostat.devices.${devId}.seasonMode`, value, true);
+    const effective = this._resolveSeasonMode(devId);
+    await this.setState(`thermostat.devices.${devId}.seasonModeEffective`, effective, true);
+    this.log.info(
+      `${devId}: Saison-Modus (Runtime) auf ${value === "auto" ? "Auto" : value === "summer" ? "Sommer" : "Winter"} gesetzt - effektiv: ${effective === "summer" ? "Sommer" : "Winter"}`,
+    );
+
+    // Zeitplaene und Regelung sofort neu auswerten.
+    await this._runScheduleEngine();
+    const dev = this.devices.get(devId);
+    if (dev) {
+      const active = (await this.getStateAsync(`device_${devId}.controlActive`))?.val === true;
+      if (active) {
+        await this._runControl(dev, `device_${devId}`);
+      }
+    }
+  }
+
+  /**
+   * Prueft regelmaessig, ob sich der Auto-Saison-Modus der Geraete
+   * geaendert hat, und loest bei Bedarf Regelungsrunden aus.
+   */
+  _startSeasonWatchdog() {
+    if (this._seasonWatchdog) {
+      this.clearInterval(this._seasonWatchdog);
+    }
+    const lastSeasons = new Map();
+    for (const devId of this.devices.keys()) {
+      lastSeasons.set(devId, this._resolveSeasonMode(devId));
+    }
+    this._seasonWatchdog = this.setInterval(() => {
+      for (const [devId, dev] of this.devices.entries()) {
+        const current = this._resolveSeasonMode(devId);
+        const last = lastSeasons.get(devId);
+        if (current !== last) {
+          lastSeasons.set(devId, current);
+          this.log.info(`${devId}: Saison-Wechsel auf ${current === "summer" ? "Sommer" : "Winter"}`);
+          this._runControl(dev, `device_${devId}`).catch((e) => {
+            this.log.warn(`${dev.name}: Regelung nach Saisonwechsel fehlgeschlagen - ${e.message}`);
+          });
+        }
+        this.setState(`thermostat.devices.${devId}.seasonModeEffective`, current, true);
+      }
+    }, 60_000);
+  }
+
+  /**
    * Verarbeitet Aenderungen an thermostat.devices.<id>.{active,target,hysteresis,override,*}
    * und schreibt sie auf die jeweiligen device_* control-States bzw.
    * startet/stoppt einen Override-Timer.
    */
   async _handleThermostatDeviceState(relId, value) {
     const match = relId.match(
-      /^thermostat\.devices\.([^.]+)\.(active|target|hysteresis|override|overrideMode|overrideTarget|overrideMinutes)$/,
+      /^thermostat\.devices\.([^.]+)\.(active|target|hysteresis|seasonMode|override|overrideMode|overrideTarget|overrideMinutes)$/,
     );
     if (!match) {
       return;
@@ -908,6 +1146,11 @@ class KlimaAdapter extends utils.Adapter {
       await this._updateGlobalActiveFromDevices();
       await this._runControl(dev, deviceId);
       this.log.info(`${dev.name}: Thermostat ${field} = ${JSON.stringify(value)}`);
+      return;
+    }
+
+    if (field === "seasonMode") {
+      await this._setRuntimeSeasonMode(devId, String(value));
       return;
     }
 
@@ -1067,6 +1310,241 @@ class KlimaAdapter extends utils.Adapter {
     await this._updateGlobalActiveFromDevices();
   }
 
+  /**
+   * Liefert Listen für das Admin-UI zurück: Gerätenamen und Temperatur-Sensoren.
+   */
+  onMessage(obj) {
+    if (typeof obj !== "object" || !obj.command) {
+      return;
+    }
+    if (obj.command === "getDeviceNames") {
+      const devices = Array.isArray(this.config.devices) ? this.config.devices : [];
+      const options = devices.filter((d) => d && d.name).map((d) => ({ value: d.name, label: d.name }));
+      if (obj.callback) {
+        this.sendTo(obj.from, obj.command, options, obj.callback);
+      }
+    } else if (obj.command === "getTemperatureSensors") {
+      this._getTemperatureSensors(obj);
+    } else if (obj.command === "getPresenceSensors") {
+      this._getPresenceSensors(obj);
+    }
+  }
+
+  /**
+   * Liefert eine Map aller Objekt-Namen (channel + device + state) zurück.
+   */
+  async _getObjectNameMap() {
+    const nameMap = new Map();
+    const types = ["state", "channel", "device"];
+    for (const type of types) {
+      try {
+        const view = await this.getObjectViewAsync("system", type, {
+          startkey: "",
+          endkey: "\u9999",
+        });
+        const rows = (view && view.rows) || [];
+        for (const row of rows) {
+          const common = row.value && row.value.common;
+          if (!common) {
+            continue;
+          }
+          const name = this._resolveName(common.name, "");
+          if (name) {
+            nameMap.set(row.id, name);
+          }
+        }
+      } catch (err) {
+        this.log.warn(`getObjectNameMap (${type}): ${err.message}`);
+      }
+    }
+    return nameMap;
+  }
+
+  /**
+   * Löst einen ioBroker-Namen auf: String direkt, i18n-Objekt auf aktuelle
+   * Sprache (fallback: de, en, erster vorhandener) zurück.
+   */
+  _resolveName(name, fallback) {
+    if (typeof name === "string") {
+      return name.trim() || fallback;
+    }
+    if (name && typeof name === "object") {
+      const lang = this.lang || "de";
+      const candidate = name[lang] || name.de || name.en;
+      if (candidate) {
+        return String(candidate).trim();
+      }
+      for (const key of Object.keys(name)) {
+        const val = name[key];
+        if (val) {
+          return String(val).trim();
+        }
+      }
+    }
+    return fallback;
+  }
+
+  /**
+   * Baut einen lesbaren Anzeigenamen aus State + nächstem benannten Vorfahren.
+   * Bevorzugt Geräte-Namen gegenüber generischen Channel-Namen wie "Channel Ext".
+   */
+  _buildSensorLabel(id, stateName, nameMap) {
+    const parts = id.split(".");
+    const genericNames = [
+      "channel ext",
+      "channel tmp",
+      "channel temperature0",
+      "channel temperature1",
+      "channel temperature",
+      "channel",
+    ];
+    let ancestorName = "";
+    let fallbackAncestor = "";
+    for (let i = parts.length - 1; i > 0; i--) {
+      const parentId = parts.slice(0, i).join(".");
+      const n = nameMap.get(parentId);
+      if (n) {
+        const lower = n.toLowerCase().replace(/[0-9]/g, "").trim();
+        if (!genericNames.includes(lower) && !genericNames.some((g) => lower.startsWith(g))) {
+          ancestorName = n;
+          break;
+        }
+        if (!fallbackAncestor) {
+          fallbackAncestor = n;
+        }
+      }
+    }
+    if (!ancestorName) {
+      ancestorName = fallbackAncestor;
+    }
+    const effectiveStateName = (typeof stateName === "string" ? stateName.trim() : "") || id;
+    if (ancestorName) {
+      return `${ancestorName} › ${effectiveStateName}`;
+    }
+    return effectiveStateName;
+  }
+
+  /**
+   * Liefert echte Temperatur-Sensoren zurück (role value/state.temperature),
+   * ohne Farbtemperaturen, Sollwerte oder Wettervorhersagen.
+   */
+  async _getTemperatureSensors(obj) {
+    const result = [{ value: "", label: "" }];
+    try {
+      const nameMap = await this._getObjectNameMap();
+      const states = await this.getObjectViewAsync("system", "state", {
+        startkey: "",
+        endkey: "\u9999",
+      });
+      const rows = (states && states.rows) || [];
+      for (const row of rows) {
+        const id = row.id;
+        const common = row.value && row.value.common;
+        if (!common) {
+          continue;
+        }
+        const name = this._resolveName(common.name, id);
+        const role = String(common.role || "").toLowerCase();
+        const nameLower = name.toLowerCase();
+        const idLower = id.toLowerCase();
+        const combined = `${nameLower} ${idLower}`;
+        const isTemperatureRole =
+          role === "value.temperature" ||
+          role === "state.temperature" ||
+          role.startsWith("value.temperature.") ||
+          role.startsWith("state.temperature.");
+        if (!isTemperatureRole) {
+          continue;
+        }
+        const unit = String(common.unit || "").toLowerCase();
+        const isCelsiusUnit = unit.includes("°c") || unit === "celsius" || unit === "c";
+        if (!isCelsiusUnit) {
+          continue;
+        }
+        if (
+          idLower.startsWith("klima.0.device_") ||
+          idLower.includes("cover0.temperature") ||
+          idLower.includes("cover1.temperature") ||
+          idLower.endsWith(".ct") ||
+          combined.includes("colortemp") ||
+          combined.includes("color temp") ||
+          combined.includes("controltarget") ||
+          combined.includes("controltemperature") ||
+          combined.includes("setpoint") ||
+          combined.includes("targettemp") ||
+          combined.includes("target temp") ||
+          combined.includes("lasttarget") ||
+          combined.includes("maxheatingtime") ||
+          combined.includes("nextdays") ||
+          combined.includes("tempmax") ||
+          combined.includes("tempmin") ||
+          combined.includes("apparent_temperature") ||
+          combined.includes("dew_point") ||
+          combined.includes("open-meteo") ||
+          combined.includes("openweathermap") ||
+          combined.includes("weather.current") ||
+          combined.includes("forecast") ||
+          combined.includes("hourly") ||
+          combined.includes("pv-") ||
+          combined.includes("pv_") ||
+          combined.includes("temperature_2m")
+        ) {
+          continue;
+        }
+        result.push({
+          value: id,
+          label: this._buildSensorLabel(id, name, nameMap),
+        });
+      }
+      result.sort((a, b) => a.label.localeCompare(b.label));
+    } catch (err) {
+      this.log.warn(`getTemperatureSensors: ${err.message}`);
+    }
+    if (obj.callback) {
+      this.log.debug(`sendTo getTemperatureSensors: ${result.length} items`);
+      this.sendTo(obj.from, obj.command, result, obj.callback);
+    }
+  }
+
+  /**
+   * Liefert Präsenz-/Bewegungsmelder zurück (role enthält motion, occupancy
+   * oder presence).
+   */
+  async _getPresenceSensors(obj) {
+    const result = [{ value: "", label: "" }];
+    try {
+      const nameMap = await this._getObjectNameMap();
+      const states = await this.getObjectViewAsync("system", "state", {
+        startkey: "",
+        endkey: "\u9999",
+      });
+      const rows = (states && states.rows) || [];
+      for (const row of rows) {
+        const id = row.id;
+        const common = row.value && row.value.common;
+        if (!common) {
+          continue;
+        }
+        const role = String(common.role || "").toLowerCase();
+        if (!role.includes("motion") && !role.includes("occupancy") && !role.includes("presence")) {
+          continue;
+        }
+        const name = this._resolveName(common.name, id);
+        result.push({
+          value: id,
+          label: this._buildSensorLabel(id, name, nameMap),
+        });
+      }
+      result.sort((a, b) => a.label.localeCompare(b.label));
+    } catch (err) {
+      this.log.warn(`getPresenceSensors: ${err.message}`);
+    }
+    if (obj.callback) {
+      this.log.debug(`sendTo getPresenceSensors: ${result.length} items`);
+      this.sendTo(obj.from, obj.command, result, obj.callback);
+    }
+  }
+
   async _onUnload(callback) {
     if (this._pollTimer) {
       this.clearInterval(this._pollTimer);
@@ -1079,6 +1557,10 @@ class KlimaAdapter extends utils.Adapter {
     if (this._scheduleTimer) {
       this.clearInterval(this._scheduleTimer);
       this._scheduleTimer = null;
+    }
+    if (this._seasonWatchdog) {
+      this.clearInterval(this._seasonWatchdog);
+      this._seasonWatchdog = null;
     }
     for (const dev of this.devices.values()) {
       try {

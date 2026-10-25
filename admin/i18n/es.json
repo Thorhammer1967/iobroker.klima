@@ -34,5 +34,15 @@
   "defaultOverrideMinutes": "Duración override (min)",
   "defaultOverrideMode": "Modo override",
   "defaultOverrideTarget": "Temperatura objetivo override",
-  "thermostatHint3": "Los valores por dispositivo (control activo, temp. objetivo, histéresis, override, sensor externo) están en los objetos klima.0.device_* y klima.0.thermostat.devices.*."
+  "thermostatHint3": "Los valores por dispositivo (control activo, temp. objetivo, histéresis, override, sensor externo) están en los objetos klima.0.device_* y klima.0.thermostat.devices.*.",
+  "scheduleName": "Nombre",
+  "scheduleActive": "Activo",
+  "fanSpeed": "Velocidad del ventilador",
+  "swing": "Oscilación",
+  "scheduleTemperatureSensor": "Sensor de temperatura",
+  "schedulePresenceSensor": "Sensor de presencia",
+  "seasonMode": "Modo temporada",
+  "summerMonths": "Meses de verano",
+  "deviceSeasonMode": "Modo temporada",
+  "deviceSeasonModeHint": "Auto = por meses de verano, Verano = solo refrigeración, Invierno = solo calefacción"
 }

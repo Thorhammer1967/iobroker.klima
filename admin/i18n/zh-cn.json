@@ -34,5 +34,15 @@
   "defaultOverrideMinutes": "覆盖时长（分）",
   "defaultOverrideMode": "覆盖模式",
   "defaultOverrideTarget": "覆盖目标温度",
-  "thermostatHint3": "每个设备的值（控制激活、目标温度、滞后、覆盖、外部传感器）位于对象 klima.0.device_* 和 klima.0.thermostat.devices.* 下。"
+  "thermostatHint3": "每个设备的值（控制激活、目标温度、滞后、覆盖、外部传感器）位于对象 klima.0.device_* 和 klima.0.thermostat.devices.* 下。",
+  "scheduleName": "名称",
+  "scheduleActive": "激活",
+  "fanSpeed": "风扇速度",
+  "swing": "摆风",
+  "scheduleTemperatureSensor": "温度传感器",
+  "schedulePresenceSensor": "存在传感器",
+  "seasonMode": "季节模式",
+  "summerMonths": "夏季月份",
+  "deviceSeasonMode": "季节模式",
+  "deviceSeasonModeHint": "自动 = 按夏季月份，夏季 = 仅制冷，冬季 = 仅制热"
 }

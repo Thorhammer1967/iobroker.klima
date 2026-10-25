@@ -1,6 +1,6 @@
 {
   "name": "iobroker.klima",
-  "version": "0.2.0",
+  "version": "0.2.3",
   "description": "Steuert Midea- und Tuya-Klimageräte einheitlich über das lokale LAN (ohne Cloud)",
   "author": {
     "name": "Thorhammer1967",
