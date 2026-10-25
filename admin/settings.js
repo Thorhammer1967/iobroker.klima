@@ -112,24 +112,41 @@ function createObjectIdInput(value, cls, onChangeFn) {
   btn.addEventListener("click", (ev) => {
     ev.preventDefault();
     const current = inp.value;
-    if (typeof showSelectIdDialog === "function") {
-      showSelectIdDialog(current, (id) => {
-        if (id !== undefined && id !== null) {
-          inp.value = id;
-          inp.title = id;
-          onChangeFn();
-          if (typeof window.M !== "undefined" && window.M.updateTextFields) {
-            window.M.updateTextFields();
-          }
-        }
-      });
-    } else {
-      const id = window.prompt("Objekt-ID eingeben:", current);
-      if (id !== null) {
+    const applyId = (id) => {
+      if (id !== undefined && id !== null && String(id).trim() !== "") {
         inp.value = id;
         inp.title = id;
         onChangeFn();
+        if (typeof window !== "undefined" && window.M && window.M.updateTextFields) {
+          window.M.updateTextFields();
+        }
       }
+    };
+    // Use ioBroker's native select dialog if available (defined by
+    // /js/adapter-settings.js). The bare identifier may sit on window in
+    // the admin frame, where adapter-settings.js registers it globally.
+    const resolve = () => {
+      if (typeof showSelectIdDialog === "function") {
+        return showSelectIdDialog;
+      }
+      if (typeof window !== "undefined" && typeof window.showSelectIdDialog === "function") {
+        return window.showSelectIdDialog;
+      }
+      return null;
+    };
+    const dialogFn = resolve();
+    if (dialogFn) {
+      try {
+        dialogFn(current, (id) => applyId(id));
+        return;
+      } catch {
+        /* fall through */
+      }
+    }
+    // Last resort: plain browser prompt.
+    const id = window.prompt("Objekt-ID eingeben:", current);
+    if (id !== null) {
+      applyId(id);
     }
   });
   wrap.appendChild(btn);
