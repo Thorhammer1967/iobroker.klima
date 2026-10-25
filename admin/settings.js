@@ -397,6 +397,7 @@ function addSchedule() {
     swing: "off",
   });
   renderSchedules();
+  refreshMaterialize();
   triggerChange();
 }
 
